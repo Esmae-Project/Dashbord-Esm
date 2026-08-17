@@ -486,9 +486,18 @@
         notice.textContent = "✅ اتصال آنلاین به Supabase موفق است.";
         render();
       } catch (e) {
-        notice.textContent = "❌ خطا در اتصال به Supabase: " + (e.message || e);
-        console.error(e);
-      }
+    console.error("SUPABASE ERROR:", e);
+
+    notice.className = "notice";
+    notice.style.background = "#fef2f2";
+    notice.style.borderColor = "#fecaca";
+    notice.style.color = "#991b1b";
+
+    notice.innerHTML =
+        "❌ خطای Supabase<br><small>" +
+        (e?.message || String(e)) +
+        "</small>";
+}
     }
 
     function render() {
