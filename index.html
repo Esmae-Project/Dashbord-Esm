@@ -370,9 +370,20 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
   </script>
   <script>
-    const SUPABASE_URL = "https://tqjkourdfxcdopstqrzp.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_WfWO41Jr6Ix03fa1tv9txg_fQ8Dd3qw";
-    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_URL = "https://tqjkourdfxcdopstqrzp.supabase.co";
+const SUPABASE_KEY = "sb_publishable_WfWO41Jr6Ix03fa1tv9txg_fQ8Dd3qw";
+
+let sb;
+
+if (typeof supabase === "undefined") {
+  const notice = document.getElementById("connectionNotice");
+  notice.style.background = "#fef2f2";
+  notice.style.borderColor = "#fecaca";
+  notice.style.color = "#991b1b";
+  notice.innerHTML = "❌ کتابخانه Supabase روی سایت لود نشده است.";
+} else {
+  sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+}
 
     let db = { projects: {}, contractors: {} };
 
