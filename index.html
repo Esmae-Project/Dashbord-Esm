@@ -1,0 +1,2281 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#111827">
+<title>داشبورد یاشار</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+    margin:0;
+    background:#f3f4f6;
+    color:#111827;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif;
+}
+
+.app{
+    max-width:1100px;
+    margin:auto;
+    padding:14px;
+}
+
+header{
+    background:linear-gradient(135deg,#111827,#263449);
+    color:white;
+    border-radius:24px;
+    padding:22px;
+    margin-bottom:14px;
+}
+
+.header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+h1{
+    margin:0;
+    font-size:22px;
+}
+
+.subtitle{
+    color:#cbd5e1;
+    font-size:13px;
+    margin-top:7px;
+}
+
+nav{
+    display:flex;
+    gap:7px;
+    overflow-x:auto;
+    padding-bottom:12px;
+}
+
+nav button{
+    white-space:nowrap;
+    border:1px solid #e5e7eb;
+    background:white;
+    color:#374151;
+    padding:10px 14px;
+    border-radius:12px;
+}
+
+nav button.active{
+    background:#111827;
+    color:white;
+}
+
+.view{
+    display:none;
+}
+
+.view.active{
+    display:block;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+}
+
+.cards{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
+}
+
+.card{
+    background:white;
+    border:1px solid #e5e7eb;
+    border-radius:18px;
+    padding:16px;
+    box-shadow:0 5px 18px #0000000a;
+}
+
+.stat small{
+    color:#6b7280;
+}
+
+.stat strong{
+    display:block;
+    font-size:19px;
+    margin-top:7px;
+}
+
+.row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+}
+
+.section{
+    margin-top:18px;
+}
+
+.section h2{
+    font-size:18px;
+}
+
+.muted{
+    color:#6b7280;
+    font-size:13px;
+}
+
+.danger{
+    color:#dc2626;
+}
+
+.success{
+    color:#16a34a;
+}
+
+.pill{
+    background:#f3f4f6;
+    padding:5px 9px;
+    border-radius:99px;
+    font-size:12px;
+}
+
+.task{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    padding:10px 0;
+    border-bottom:1px solid #eee;
+}
+
+.task:last-child{
+    border-bottom:0;
+}
+
+.dot{
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    flex:none;
+}
+
+.red{
+    background:#ef4444;
+}
+
+.yellow{
+    background:#f59e0b;
+}
+
+.green-dot{
+    background:#22c55e;
+}
+
+.toolbar{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:12px;
+}
+
+.btn{
+    border:0;
+    background:#111827;
+    color:white;
+    padding:10px 14px;
+    border-radius:12px;
+}
+
+.btn.green{
+    background:#16a34a;
+}
+
+.btn.red{
+    background:#dc2626;
+}
+
+.btn.light{
+    background:white;
+    color:#111827;
+    border:1px solid #e5e7eb;
+}
+
+.table-wrap{
+    overflow:auto;
+    border:1px solid #e5e7eb;
+    border-radius:16px;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    background:white;
+}
+
+th,td{
+    padding:11px;
+    text-align:right;
+    border-bottom:1px solid #eee;
+    font-size:13px;
+}
+
+th{
+    background:#f9fafb;
+}
+
+details{
+    margin-top:9px;
+    border:1px solid #eee;
+    border-radius:12px;
+    padding:10px;
+}
+
+summary{
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.modal{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:#0008;
+    z-index:100;
+    align-items:flex-end;
+    justify-content:center;
+    padding:10px;
+}
+
+.modal.show{
+    display:flex;
+}
+
+.modal-box{
+    background:white;
+    width:min(650px,100%);
+    max-height:90vh;
+    overflow:auto;
+    border-radius:22px;
+    padding:18px;
+}
+
+.form{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+}
+
+.field{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+}
+
+.field.full{
+    grid-column:1/-1;
+}
+
+.field label{
+    font-size:12px;
+    color:#6b7280;
+}
+
+.field input,
+.field select{
+    padding:11px;
+    border:1px solid #e5e7eb;
+    border-radius:11px;
+    background:white;
+}
+
+.actions{
+    display:flex;
+    gap:8px;
+    margin-top:14px;
+}
+
+.empty{
+    background:white;
+    border:1px dashed #d1d5db;
+    border-radius:16px;
+    padding:30px;
+    text-align:center;
+    color:#6b7280;
+}
+
+footer{
+    text-align:center;
+    color:#6b7280;
+    font-size:12px;
+    padding:25px 0;
+}
+
+@media(max-width:700px){
+
+    .grid{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .cards{
+        grid-template-columns:1fr;
+    }
+
+    .form{
+        grid-template-columns:1fr;
+    }
+
+    .field.full{
+        grid-column:auto;
+    }
+
+    h1{
+        font-size:20px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header>
+    <div class="header">
+        <div>
+            <h1>🏗️ داشبورد مدیریت پروژه یاشار</h1>
+            <div class="subtitle">
+                پروژه‌ها • پیمانکاران • حسابداری • کارفرماها
+            </div>
+        </div>
+
+        <button class="btn" onclick="openModal('data')">
+            ⚙️
+        </button>
+    </div>
+</header>
+
+<nav id="nav"></nav>
+
+<!-- DASHBOARD -->
+<section id="dashboard" class="view active">
+
+    <div id="stats" class="grid"></div>
+
+    <div class="section">
+        <h2>👷 پیمانکاران</h2>
+        <div id="contractorCards" class="cards"></div>
+    </div>
+
+    <div class="section">
+        <h2>🏢 آرتا پیشرو</h2>
+        <div id="employerCard" class="card"></div>
+    </div>
+
+</section>
+
+
+<!-- PROJECTS -->
+<section id="projects" class="view">
+
+    <div class="toolbar">
+        <button class="btn" onclick="openModal('project')">
+            ＋ پروژه جدید
+        </button>
+    </div>
+
+    <div id="projectsList" class="cards"></div>
+
+</section>
+
+
+<!-- CONTRACTORS -->
+<section id="contractors" class="view">
+
+    <div class="toolbar">
+        <button class="btn" onclick="openModal('contractor')">
+            ＋ پیمانکار جدید
+        </button>
+    </div>
+
+    <div id="contractorsList"></div>
+
+</section>
+
+
+<!-- ACCOUNTING -->
+<section id="accounting" class="view">
+
+    <div class="toolbar">
+
+        <button class="btn" onclick="openModal('work')">
+            ＋ کار انجام‌شده
+        </button>
+
+        <button class="btn green" onclick="openModal('payment')">
+            ＋ پرداخت
+        </button>
+
+    </div>
+
+    <div class="table-wrap">
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>پیمانکار</th>
+                    <th>کار انجام‌شده</th>
+                    <th>پرداخت</th>
+                    <th>مانده</th>
+                </tr>
+            </thead>
+
+            <tbody id="accounts"></tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+
+<!-- TASKS -->
+<section id="tasks" class="view">
+
+    <div class="toolbar">
+
+        <button class="btn" onclick="openModal('task')">
+            ＋ کار جدید
+        </button>
+
+    </div>
+
+    <div id="tasksList" class="cards"></div>
+
+</section>
+
+
+<!-- EMPLOYERS -->
+<section id="employers" class="view">
+
+    <div id="employersList" class="cards"></div>
+
+</section>
+
+
+<!-- INVENTORY -->
+<section id="inventory" class="view">
+
+    <div class="empty">
+
+        📦 بخش انبار
+
+        <br><br>
+
+        ساختار این بخش آماده توسعه است.
+
+    </div>
+
+</section>
+
+
+<!-- PURCHASES -->
+<section id="purchases" class="view">
+
+    <div class="empty">
+
+        🛒 بخش خرید
+
+        <br><br>
+
+        ساختار این بخش آماده توسعه است.
+
+    </div>
+
+</section>
+
+
+<footer>
+
+    اطلاعات روی همین دستگاه ذخیره می‌شود.
+    <br>
+    حتماً هر چند وقت یک‌بار Export بگیر.
+
+</footer>
+
+</div>
+
+
+<!-- MODAL -->
+
+<div id="modal" class="modal">
+
+    <div id="modalBox" class="modal-box"></div>
+
+</div>
+
+<input
+    id="importFile"
+    type="file"
+    accept=".json"
+    hidden
+>
+
+
+<script>
+
+/* =====================================================
+   اطلاعات اولیه
+===================================================== */
+
+const INITIAL_DATA = {
+
+projects:{
+
+"خاوران":{
+employer:null,
+
+tasks:[
+["اجرای نرده راه پله","red"],
+["کاشی کاری لابی","yellow"],
+["ورودی جلوی آسانسور","yellow"],
+["راه اندازی آسانسور","yellow"],
+["سقف کاذب پارکینگ","yellow"],
+["نصبیات برقی","yellow"],
+["کف حیاط","yellow"],
+["کف پارکینگ","yellow"],
+["اصلاحیه وال مش","yellow"]
+],
+
+completed:[]
+},
+
+
+"باغ فردوس":{
+employer:null,
+
+tasks:[
+["اجرای وال پست های طبقات","yellow"],
+["اجرای دیوار های طبقات بعد اجرای وال پست","yellow"]
+],
+
+completed:[]
+},
+
+
+"گازران":{
+employer:"آرتا پیشرو",
+
+tasks:[
+["تمیزکاری روی آهن ها","yellow"]
+],
+
+completed:[]
+},
+
+
+"لاله":{
+employer:"آرتا پیشرو",
+
+tasks:[],
+
+completed:[]
+},
+
+
+"قطب":{
+employer:"آرتا پیشرو",
+
+tasks:[
+["تمیزکاری و ضدزنگ زنی درب","yellow"]
+],
+
+completed:[]
+},
+
+
+"قونقا":{
+employer:"آرتا پیشرو",
+
+tasks:[],
+
+completed:[]
+},
+
+
+"همایش":{
+employer:"آرتا پیشرو",
+
+tasks:[
+["اجرای دیوار","yellow"],
+["سیمانکاری","yellow"]
+],
+
+completed:[]
+}
+
+},
+
+
+contractors:{
+
+"حامد جعفریان":{
+
+work:[
+
+{
+project:"گازران",
+description:"فاکتور اول",
+amount:6860000,
+date:null
+},
+
+{
+project:"گازران",
+description:"فاکتور دوم",
+amount:20804000,
+date:null
+},
+
+{
+project:"قطب",
+description:"کار انجام‌شده",
+amount:43507214,
+date:"۱۰ مرداد ۱۴۰۵"
+},
+
+{
+project:"لاله",
+description:"کار ثبت‌شده",
+amount:25360000,
+date:"۱ مرداد ۱۴۰۵"
+}
+
+],
+
+payments:[
+
+{
+description:"پرداخت اول",
+amount:27664000,
+project:null,
+date:null
+},
+
+{
+description:"پرداخت دوم",
+amount:30000000,
+project:null,
+date:null
+},
+
+{
+description:"پرداخت سوم",
+amount:32000000,
+project:null,
+date:"۲۵ مرداد ۱۴۰۵"
+}
+
+]
+
+},
+
+
+"امید یاری":{
+
+work:[
+
+{
+project:"گازران",
+description:"سیمانکاری",
+amount:77000000,
+date:null
+},
+
+{
+project:"قطب",
+description:"سیمانکاری",
+amount:10000000,
+date:null
+},
+
+{
+project:"قطب",
+description:"تمیزکاری",
+amount:2000000,
+date:null
+}
+
+],
+
+payments:[
+
+{
+description:"پرداخت اول",
+amount:40000000,
+project:null,
+date:null
+},
+
+{
+description:"پرداخت دوم",
+amount:10000000,
+project:null,
+date:null
+}
+
+]
+
+}
+
+}
+
+};
+
+
+/* =====================================================
+   DATABASE
+===================================================== */
+
+let db =
+JSON.parse(
+localStorage.getItem("yasharConstructionDB")
+) || INITIAL_DATA;
+
+
+/* =====================================================
+   HELPERS
+===================================================== */
+
+function save(){
+
+    localStorage.setItem(
+        "yasharConstructionDB",
+        JSON.stringify(db)
+    );
+
+    render();
+
+}
+
+
+function money(number){
+
+    return new Intl.NumberFormat(
+        "fa-IR"
+    ).format(number || 0) + " تومان";
+
+}
+
+
+function totalWork(name){
+
+    return (
+        db.contractors[name]?.work || []
+    ).reduce(
+        (sum,item)=>sum + item.amount,
+        0
+    );
+
+}
+
+
+function totalPayments(name){
+
+    return (
+        db.contractors[name]?.payments || []
+    ).reduce(
+        (sum,item)=>sum + item.amount,
+        0
+    );
+
+}
+
+
+function balance(name){
+
+    return (
+        totalWork(name)
+        -
+        totalPayments(name)
+    );
+
+}
+
+
+/* =====================================================
+   NAVIGATION
+===================================================== */
+
+function buildNavigation(){
+
+    const items = [
+
+        ["dashboard","🏠 داشبورد"],
+        ["projects","🏗️ پروژه‌ها"],
+        ["contractors","👷 پیمانکاران"],
+        ["accounting","💰 حسابداری"],
+        ["tasks","📋 کارها"],
+        ["employers","🏢 کارفرماها"],
+        ["inventory","📦 انبار"],
+        ["purchases","🛒 خرید"]
+
+    ];
+
+    document.getElementById("nav").innerHTML =
+        items.map(
+            (item,index)=>`
+
+            <button
+                class="${index===0?"active":""}"
+                onclick="goTo('${item[0]}',this)"
+            >
+                ${item[1]}
+            </button>
+
+            `
+        ).join("");
+
+}
+
+
+function goTo(id,button){
+
+    document
+        .querySelectorAll("nav button")
+        .forEach(
+            b=>b.classList.remove("active")
+        );
+
+    button.classList.add("active");
+
+    document
+        .querySelectorAll(".view")
+        .forEach(
+            v=>v.classList.remove("active")
+        );
+
+    document
+        .getElementById(id)
+        .classList.add("active");
+
+}
+
+
+/* =====================================================
+   RENDER
+===================================================== */
+
+function render(){
+
+    buildNavigation();
+
+    const names =
+        Object.keys(db.contractors);
+
+
+    let totalW = 0;
+    let totalP = 0;
+
+    names.forEach(name=>{
+
+        totalW += totalWork(name);
+
+        totalP += totalPayments(name);
+
+    });
+
+
+    document.getElementById("stats").innerHTML = `
+
+        <div class="card stat">
+
+            <small>پروژه‌ها</small>
+
+            <strong>
+                ${Object.keys(db.projects).length}
+            </strong>
+
+        </div>
+
+
+        <div class="card stat">
+
+            <small>پیمانکاران</small>
+
+            <strong>
+                ${names.length}
+            </strong>
+
+        </div>
+
+
+        <div class="card stat">
+
+            <small>کل کار انجام‌شده</small>
+
+            <strong>
+                ${money(totalW)}
+            </strong>
+
+        </div>
+
+
+        <div class="card stat">
+
+            <small>کل مانده بدهی</small>
+
+            <strong class="danger">
+                ${money(totalW-totalP)}
+            </strong>
+
+        </div>
+
+    `;
+
+
+    /* پیمانکاران */
+
+    document.getElementById(
+        "contractorCards"
+    ).innerHTML =
+
+        names.map(name=>`
+
+            <div class="card">
+
+                <div class="row">
+
+                    <strong>
+                        👤 ${name}
+                    </strong>
+
+                    <strong class="danger">
+                        ${money(balance(name))}
+                    </strong>
+
+                </div>
+
+                <p class="muted">
+
+                    کار انجام‌شده:
+                    ${money(totalWork(name))}
+
+                    <br>
+
+                    پرداخت:
+                    ${money(totalPayments(name))}
+
+                </p>
+
+            </div>
+
+        `).join("");
+
+
+    /* آرتا پیشرو */
+
+    const artaProjects =
+        Object.keys(db.projects)
+        .filter(
+            p=>db.projects[p].employer==="آرتا پیشرو"
+        );
+
+
+    let artaWork = 0;
+    let artaPayments = 0;
+
+
+    names.forEach(name=>{
+
+        db.contractors[name].work.forEach(item=>{
+
+            if(
+                artaProjects.includes(item.project)
+            ){
+
+                artaWork += item.amount;
+
+            }
+
+        });
+
+
+        db.contractors[name].payments.forEach(payment=>{
+
+            if(
+                !payment.project ||
+                artaProjects.includes(payment.project)
+            ){
+
+                artaPayments += payment.amount;
+
+            }
+
+        });
+
+    });
+
+
+    document.getElementById(
+        "employerCard"
+    ).innerHTML = `
+
+        <div class="row">
+
+            <div>
+
+                <strong>
+                    🏢 آرتا پیشرو
+                </strong>
+
+                <p class="muted">
+                    ${artaProjects.join(" • ")}
+                </p>
+
+            </div>
+
+            <strong class="danger">
+                ${money(artaWork-artaPayments)}
+            </strong>
+
+        </div>
+
+        <p>
+
+            کل کار:
+            <b>${money(artaWork)}</b>
+
+            <br>
+
+            پرداخت:
+            <b>${money(artaPayments)}</b>
+
+            <br>
+
+            مانده:
+            <b class="danger">
+                ${money(artaWork-artaPayments)}
+            </b>
+
+        </p>
+
+    `;
+
+
+    /* پروژه‌ها */
+
+    document.getElementById(
+        "projectsList"
+    ).innerHTML =
+
+        Object.entries(db.projects)
+        .map(([project,data])=>`
+
+            <div class="card">
+
+                <div class="row">
+
+                    <strong>
+                        🏗️ ${project}
+                    </strong>
+
+                    <span class="pill">
+                        ${data.employer || "مستقل"}
+                    </span>
+
+                </div>
+
+
+                ${
+                    data.tasks.length
+
+                    ?
+
+                    data.tasks.map(
+                        (task,index)=>`
+
+                        <div class="task">
+
+                            <span
+                                class="dot ${
+                                    task[1]
+                                }"
+                            ></span>
+
+                            <span>
+                                ${task[0]}
+                            </span>
+
+                            <button
+                                class="btn light"
+                                style="margin-right:auto"
+                                onclick="completeTask(
+                                    '${escapeText(project)}',
+                                    ${index}
+                                )"
+                            >
+                                انجام
+                            </button>
+
+                        </div>
+
+                        `
+                    ).join("")
+
+                    :
+
+                    `<p class="muted">
+                        کار باقی‌مانده‌ای ندارد.
+                    </p>`
+
+                }
+
+            </div>
+
+        `).join("");
+
+
+    /* پیمانکاران */
+
+    document.getElementById(
+        "contractorsList"
+    ).innerHTML =
+
+        names.map(name=>`
+
+            <div
+                class="card"
+                style="margin-bottom:10px"
+            >
+
+                <div class="row">
+
+                    <strong>
+                        👤 ${name}
+                    </strong>
+
+                    <strong class="danger">
+                        ${money(balance(name))}
+                    </strong>
+
+                </div>
+
+
+                <details>
+
+                    <summary>
+                        کارهای انجام‌شده
+                    </summary>
+
+                    ${
+                        db.contractors[name].work
+                        .map(item=>`
+
+                            <p>
+
+                                ${item.project}
+                                —
+                                ${item.description}
+
+                                <br>
+
+                                <b>
+                                    ${money(item.amount)}
+                                </b>
+
+                                ${
+                                    item.date
+                                    ?
+                                    `<span class="muted">
+                                        — ${item.date}
+                                    </span>`
+                                    :
+                                    ""
+                                }
+
+                            </p>
+
+                        `).join("")
+
+                    }
+
+                </details>
+
+
+                <details>
+
+                    <summary>
+                        پرداخت‌ها
+                    </summary>
+
+                    ${
+                        db.contractors[name].payments
+                        .map(payment=>`
+
+                            <p>
+
+                                ${payment.description}
+
+                                <br>
+
+                                <b class="success">
+                                    ${money(payment.amount)}
+                                </b>
+
+                                ${
+                                    payment.date
+                                    ?
+                                    `<span class="muted">
+                                        — ${payment.date}
+                                    </span>`
+                                    :
+                                    ""
+                                }
+
+                            </p>
+
+                        `).join("")
+
+                    }
+
+                </details>
+
+            </div>
+
+        `).join("");
+
+
+    /* حسابداری */
+
+    document.getElementById(
+        "accounts"
+    ).innerHTML =
+
+        names.map(name=>`
+
+            <tr>
+
+                <td>
+                    ${name}
+                </td>
+
+                <td>
+                    ${money(totalWork(name))}
+                </td>
+
+                <td class="success">
+                    ${money(totalPayments(name))}
+                </td>
+
+                <td class="danger">
+
+                    <b>
+                        ${money(balance(name))}
+                    </b>
+
+                </td>
+
+            </tr>
+
+        `).join("");
+
+
+    /* کارها */
+
+    document.getElementById(
+        "tasksList"
+    ).innerHTML =
+
+        Object.entries(db.projects)
+        .map(([project,data])=>`
+
+            <div class="card">
+
+                <strong>
+                    🏗️ ${project}
+                </strong>
+
+                ${
+                    data.tasks.length
+
+                    ?
+
+                    data.tasks.map(task=>`
+
+                        <div class="task">
+
+                            <span
+                                class="dot ${task[1]}"
+                            ></span>
+
+                            ${task[0]}
+
+                        </div>
+
+                    `).join("")
+
+                    :
+
+                    `<p class="muted">
+                        کار باقی‌مانده‌ای نیست.
+                    </p>`
+
+                }
+
+
+                ${
+                    data.completed.length
+
+                    ?
+
+                    `
+
+                    <details>
+
+                        <summary>
+                            ✅ انجام‌شده
+                            (${data.completed.length})
+                        </summary>
+
+                        ${
+                            data.completed.map(
+                                item=>`
+
+                                <p>
+                                    🟢 ${item}
+                                </p>
+
+                            `).join("")
+                        }
+
+                    </details>
+
+                    `
+
+                    :
+
+                    ""
+
+                }
+
+            </div>
+
+        `).join("");
+
+
+    /* کارفرماها */
+
+    document.getElementById(
+        "employersList"
+    ).innerHTML = `
+
+        <div class="card">
+
+            <strong>
+                🏢 آرتا پیشرو
+            </strong>
+
+            <p class="muted">
+                ${artaProjects.join(" • ")}
+            </p>
+
+            <p>
+
+                کار:
+                ${money(artaWork)}
+
+                <br>
+
+                پرداخت:
+                ${money(artaPayments)}
+
+                <br>
+
+                <b class="danger">
+
+                    مانده:
+                    ${money(artaWork-artaPayments)}
+
+                </b>
+
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <strong>
+                🏢 پروژه‌های مستقل
+            </strong>
+
+            <p>
+
+                خاوران • باغ فردوس
+
+            </p>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =====================================================
+   COMPLETE TASK
+===================================================== */
+
+function completeTask(project,index){
+
+    const task =
+        db.projects[project].tasks.splice(
+            index,
+            1
+        )[0];
+
+    db.projects[project].completed.push(
+        task[0]
+    );
+
+    save();
+
+}
+
+
+/* =====================================================
+   MODALS
+===================================================== */
+
+function openModal(type){
+
+    let title = "";
+    let content = "";
+
+
+    if(type==="work"){
+
+        title="ثبت کار انجام‌شده";
+
+        content=`
+
+            <div class="form">
+
+                <div class="field">
+
+                    <label>
+                        پیمانکار
+                    </label>
+
+                    <select id="formContractor">
+
+                        ${
+                            Object.keys(db.contractors)
+                            .map(
+                                x=>`<option>${x}</option>`
+                            )
+                            .join("")
+                        }
+
+                    </select>
+
+                </div>
+
+
+                <div class="field">
+
+                    <label>
+                        پروژه
+                    </label>
+
+                    <select id="formProject">
+
+                        ${
+                            Object.keys(db.projects)
+                            .map(
+                                x=>`<option>${x}</option>`
+                            )
+                            .join("")
+                        }
+
+                    </select>
+
+                </div>
+
+
+                <div class="field full">
+
+                    <label>
+                        شرح کار
+                    </label>
+
+                    <input
+                        id="formDescription"
+                    >
+
+                </div>
+
+
+                <div class="field">
+
+                    <label>
+                        مبلغ تومان
+                    </label>
+
+                    <input
+                        id="formAmount"
+                        type="number"
+                    >
+
+                </div>
+
+            </div>
+
+
+            <div class="actions">
+
+                <button
+                    class="btn"
+                    onclick="addWork()"
+                >
+                    ثبت
+                </button>
+
+                <button
+                    class="btn light"
+                    onclick="closeModal()"
+                >
+                    بستن
+                </button>
+
+            </div>
+
+        `;
+
+    }
+
+
+    if(type==="payment"){
+
+        title="ثبت پرداخت";
+
+        content=`
+
+            <div class="form">
+
+                <div class="field">
+
+                    <label>
+                        پیمانکار
+                    </label>
+
+                    <select id="formContractor">
+
+                        ${
+                            Object.keys(db.contractors)
+                            .map(
+                                x=>`<option>${x}</option>`
+                            )
+                            .join("")
+                        }
+
+                    </select>
+
+                </div>
+
+
+                <div class="field">
+
+                    <label>
+                        مبلغ تومان
+                    </label>
+
+                    <input
+                        id="formAmount"
+                        type="number"
+                    >
+
+                </div>
+
+
+                <div class="field full">
+
+                    <label>
+                        شرح پرداخت
+                    </label>
+
+                    <input
+                        id="formDescription"
+                        value="پرداخت جدید"
+                    >
+
+                </div>
+
+            </div>
+
+
+            <div class="actions">
+
+                <button
+                    class="btn green"
+                    onclick="addPayment()"
+                >
+                    ثبت پرداخت
+                </button>
+
+                <button
+                    class="btn light"
+                    onclick="closeModal()"
+                >
+                    بستن
+                </button>
+
+            </div>
+
+        `;
+
+    }
+
+
+    if(type==="contractor"){
+
+        title="پیمانکار جدید";
+
+        content=`
+
+            <div class="field">
+
+                <label>
+                    نام پیمانکار
+                </label>
+
+                <input id="newContractor">
+
+            </div>
+
+
+            <div class="actions">
+
+                <button
+                    class="btn"
+                    onclick="addContractor()"
+                >
+                    ثبت
+                </button>
+
+            </div>
+
+        `;
+
+    }
+
+
+    if(type==="project"){
+
+        title="پروژه جدید";
+
+        content=`
+
+            <div class="field">
+
+                <label>
+                    نام پروژه
+                </label>
+
+                <input id="newProject">
+
+            </div>
+
+
+            <div class="field">
+
+                <label>
+                    کارفرما
+                </label>
+
+                <select id="newEmployer">
+
+                    <option value="">
+                        مستقل
+                    </option>
+
+                    <option>
+                        آرتا پیشرو
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="actions">
+
+                <button
+                    class="btn"
+                    onclick="addProject()"
+                >
+                    ثبت
+                </button>
+
+            </div>
+
+        `;
+
+    }
+
+
+    if(type==="task"){
+
+        title="کار جدید";
+
+        content=`
+
+            <div class="form">
+
+                <div class="field">
+
+                    <label>
+                        پروژه
+                    </label>
+
+                    <select id="taskProject">
+
+                        ${
+                            Object.keys(db.projects)
+                            .map(
+                                x=>`<option>${x}</option>`
+                            )
+                            .join("")
+                        }
+
+                    </select>
+
+                </div>
+
+
+                <div class="field">
+
+                    <label>
+                        اولویت
+                    </label>
+
+                    <select id="taskPriority">
+
+                        <option value="yellow">
+                            عادی
+                        </option>
+
+                        <option value="red">
+                            ضروری
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="field full">
+
+                    <label>
+                        شرح کار
+                    </label>
+
+                    <input id="taskDescription">
+
+                </div>
+
+            </div>
+
+
+            <div class="actions">
+
+                <button
+                    class="btn"
+                    onclick="addTask()"
+                >
+                    ثبت
+                </button>
+
+            </div>
+
+        `;
+
+    }
+
+
+    if(type==="data"){
+
+        title="مدیریت اطلاعات";
+
+        content=`
+
+            <p class="muted">
+
+                اطلاعات حساب‌ها داخل همین مرورگر
+                ذخیره می‌شود.
+
+            </p>
+
+            <div class="actions">
+
+                <button
+                    class="btn"
+                    onclick="exportData()"
+                >
+                    ⬇️ Export
+                </button>
+
+
+                <button
+                    class="btn light"
+                    onclick="document.getElementById('importFile').click()"
+                >
+                    ⬆️ Import
+                </button>
+
+
+                <button
+                    class="btn red"
+                    onclick="resetData()"
+                >
+                    بازنشانی
+                </button>
+
+            </div>
+
+        `;
+
+    }
+
+
+    document.getElementById(
+        "modalBox"
+    ).innerHTML = `
+
+        <h3>
+            ${title}
+        </h3>
+
+        ${content}
+
+    `;
+
+
+    document.getElementById(
+        "modal"
+    ).classList.add("show");
+
+}
+
+
+/* =====================================================
+   CLOSE MODAL
+===================================================== */
+
+function closeModal(){
+
+    document
+        .getElementById("modal")
+        .classList.remove("show");
+
+}
+
+
+/* =====================================================
+   ADD CONTRACTOR
+===================================================== */
+
+function addContractor(){
+
+    const name =
+        document
+        .getElementById("newContractor")
+        .value
+        .trim();
+
+    if(!name)return;
+
+    db.contractors[name]={
+        work:[],
+        payments:[]
+    };
+
+    save();
+
+    closeModal();
+
+}
+
+
+/* =====================================================
+   ADD PROJECT
+===================================================== */
+
+function addProject(){
+
+    const name =
+        document
+        .getElementById("newProject")
+        .value
+        .trim();
+
+    if(!name)return;
+
+    db.projects[name]={
+
+        employer:
+            document
+            .getElementById("newEmployer")
+            .value || null,
+
+        tasks:[],
+
+        completed:[]
+
+    };
+
+    save();
+
+    closeModal();
+
+}
+
+
+/* =====================================================
+   ADD WORK
+===================================================== */
+
+function addWork(){
+
+    const contractor =
+        document
+        .getElementById("formContractor")
+        .value;
+
+    const project =
+        document
+        .getElementById("formProject")
+        .value;
+
+    const description =
+        document
+        .getElementById("formDescription")
+        .value
+        .trim();
+
+    const amount =
+        Number(
+            document
+            .getElementById("formAmount")
+            .value
+        );
+
+
+    if(
+        !description ||
+        !amount
+    ){
+
+        alert(
+            "شرح کار و مبلغ را وارد کنید."
+        );
+
+        return;
+
+    }
+
+
+    db.contractors[
+        contractor
+    ].work.push({
+
+        project:project,
+
+        description:description,
+
+        amount:amount,
+
+        date:null
+
+    });
+
+
+    save();
+
+    closeModal();
+
+}
+
+
+/* =====================================================
+   ADD PAYMENT
+===================================================== */
+
+function addPayment(){
+
+    const contractor =
+        document
+        .getElementById("formContractor")
+        .value;
+
+    const description =
+        document
+        .getElementById("formDescription")
+        .value
+        .trim();
+
+    const amount =
+        Number(
+            document
+            .getElementById("formAmount")
+            .value
+        );
+
+
+    if(!amount){
+
+        alert(
+            "مبلغ پرداخت را وارد کنید."
+        );
+
+        return;
+
+    }
+
+
+    db.contractors[
+        contractor
+    ].payments.push({
+
+        description:
+            description || "پرداخت جدید",
+
+        amount:amount,
+
+        project:null,
+
+        date:null
+
+    });
+
+
+    save();
+
+    closeModal();
+
+}
+
+
+/* =====================================================
+   ADD TASK
+===================================================== */
+
+function addTask(){
+
+    const project =
+        document
+        .getElementById("taskProject")
+        .value;
+
+    const description =
+        document
+        .getElementById("taskDescription")
+        .value
+        .trim();
+
+    const priority =
+        document
+        .getElementById("taskPriority")
+        .value;
+
+
+    if(!description)return;
+
+
+    db.projects[
+        project
+    ].tasks.push([
+
+        description,
+
+        priority
+
+    ]);
+
+
+    save();
+
+    closeModal();
+
+}
+
+
+/* =====================================================
+   EXPORT
+===================================================== */
+
+function exportData(){
+
+    const blob =
+        new Blob(
+
+            [
+                JSON.stringify(
+                    db,
+                    null,
+                    2
+                )
+            ],
+
+            {
+                type:"application/json"
+            }
+
+        );
+
+
+    const link =
+        document.createElement("a");
+
+    link.href =
+        URL.createObjectURL(blob);
+
+    link.download =
+        "yashar-construction-backup.json";
+
+    link.click();
+
+}
+
+
+/* =====================================================
+   IMPORT
+===================================================== */
+
+document
+.getElementById("importFile")
+.addEventListener(
+    "change",
+    function(event){
+
+        const file =
+            event.target.files[0];
+
+        if(!file)return;
+
+
+        const reader =
+            new FileReader();
+
+
+        reader.onload=function(){
+
+            try{
+
+                db =
+                    JSON.parse(
+                        reader.result
+                    );
+
+                save();
+
+                closeModal();
+
+                alert(
+                    "اطلاعات با موفقیت وارد شد."
+                );
+
+            }
+
+            catch(error){
+
+                alert(
+                    "فایل معتبر نیست."
+                );
+
+            }
+
+        };
+
+
+        reader.readAsText(file);
+
+    }
+);
+
+
+/* =====================================================
+   RESET
+===================================================== */
+
+function resetData(){
+
+    if(
+        !confirm(
+            "همه اطلاعات به نسخه اولیه برگردد؟"
+        )
+    )return;
+
+
+    db =
+        JSON.parse(
+            JSON.stringify(
+                INITIAL_DATA
+            )
+        );
+
+
+    save();
+
+    closeModal();
+
+}
+
+
+/* =====================================================
+   ESCAPE
+===================================================== */
+
+function escapeText(text){
+
+    return text
+        .replaceAll("\\","\\\\")
+        .replaceAll("'","\\'");
+
+}
+
+
+/* =====================================================
+   CLOSE BY BACKGROUND
+===================================================== */
+
+document
+.getElementById("modal")
+.addEventListener(
+    "click",
+    function(event){
+
+        if(
+            event.target.id==="modal"
+        ){
+
+            closeModal();
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   START
+===================================================== */
+
+render();
+
+</script>
+
+</body>
+</html>
