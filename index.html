@@ -444,6 +444,26 @@ footer{
     <div id="tasksList" class="cards"></div>
 
 </section>
+         <!-- workers -->
+    <section id="workerActivities" class="view">
+  <div class="toolbar">
+    <button class="btn" onclick="loadWorkerActivities()">🔄 تازه‌سازی</button>
+  </div>
+
+  <div class="card">
+    <h2>👷 فعالیت نیروها</h2>
+
+    <p class="muted">
+      اضافه‌کاری، کارهای خاص و فعالیت روزانه نیروها
+    </p>
+
+    <div id="workerActivitiesList">
+      <div class="empty">
+        در حال دریافت اطلاعات...
+      </div>
+    </div>
+  </div>
+</section>
 
 
 <!-- EMPLOYERS -->
@@ -766,6 +786,7 @@ function buildNavigation(){
         ["contractors","👷 پیمانکاران"],
         ["accounting","💰 حسابداری"],
         ["tasks","📋 کارها"],
+        ["workerActivities", "👷 فعالیت نیروها"],
         ["employers","🏢 کارفرماها"],
         ["inventory","📦 انبار"],
         ["purchases","🛒 خرید"]
@@ -2154,7 +2175,95 @@ document
 
         }
     );
+async function loadWorkerActivities() {
+  const box = document.getElementById("workerActivitiesList");
 
+  if (!box) return;
+
+  box.innerHTML = `<div class="empty">⏳ در حال دریافت فعالیت‌ها...</div>`;
+
+  try {
+    const { data, error } = await sb
+      .from("worker_activities")
+      .select(`
+        id,
+        person_name,
+        activity_date,
+        hours,
+        description,
+        project_id
+      `)
+      .order("activity_date", { ascending: false })
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    const projects = Object.entries(db.projects).reduce((acc, [name, project]) => {
+      acc[project.id] = name;
+      return acc;
+    }, {});
+
+    if (!data || !data.length) {
+      box.innerHTML = `
+        <div class="empty">
+          👷 هنوز فعالیتی ثبت نشده.
+        </div>
+      `;
+      return;
+    }
+
+    box.innerHTML = data.map(x => `
+      <details>
+        <summary>
+          👤 ${esc(x.person_name)}
+          <span class="pill">
+            ${x.hours ? esc(x.hours) + " ساعت" : "فعالیت"}
+          </span>
+        </summary>
+
+        <div style="margin-top:10px">
+          <p>
+            <b>🏗️ پروژه:</b>
+            ${esc(projects[x.project_id] || "نامشخص")}
+          </p>
+
+          <p>
+            <b>📅 تاریخ:</b>
+            ${dateFa(x.activity_date) || "-"}
+          </p>
+
+          ${x.hours ? `
+            <p>
+              <b>⏱️ مدت:</b>
+              ${esc(x.hours)} ساعت
+            </p>
+          ` : ""}
+
+          <p>
+            <b>📝 شرح:</b>
+            ${esc(x.description)}
+          </p>
+        </div>
+      </details>
+    `).join("");
+
+  } catch (e) {
+    console.error("WORKER ACTIVITIES ERROR:", e);
+
+    box.innerHTML = `
+      <div class="notice"
+        style="
+          background:#fef2f2;
+          border-color:#fecaca;
+          color:#991b1b;
+        ">
+        ❌ خطا در دریافت فعالیت‌ها
+        <br>
+        <small>${esc(e?.message || String(e))}</small>
+      </div>
+    `;
+  }
+}
 
 /* =====================================================
    START
@@ -2164,6 +2273,14 @@ buildNavigation();
 
 loadData();
 
+    
+
+setTimeout(() => {
+
+  loadWorkerActivities();
+
+}, 500);
+    
 </script>
 
 </body>
