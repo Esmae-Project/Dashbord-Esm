@@ -430,47 +430,61 @@ footer{
 
 
     <!-- حساب‌های شخصی -->
-
-    <div class="section">
-
-        <div class="card">
-
-            <div class="row">
-
-                <div>
-                    <h2 style="margin:0">
-                        👤 حساب‌های شخصی
-                    </h2>
-
-                    <p class="muted">
-                        بدهی‌ها و طلب‌های شخصی، جدا از حساب پروژه‌ها
-                    </p>
-                </div>
-
-                <button
-                    class="btn light"
-                    onclick="loadPersonalAccounts()"
-                >
-                    🔄 تازه‌سازی
-                </button>
-
-            </div>
-
-
-            <div
-                id="personalAccountsList"
-                style="margin-top:12px"
-            >
-
-                <div class="empty">
-                    ⏳ در حال دریافت حساب‌های شخصی...
-                </div>
-
-            </div>
-
-        </div>
-
+<div class="section">
+  <div class="card">
+    <div class="row">
+      <div>
+        <h2 style="margin:0">
+          👤 حساب‌های شخصی
+        </h2>
+        <p class="muted">
+          بدهی‌ها و طلب‌های شخصی، جدا از حساب پروژه‌ها
+        </p>
+      </div>
+      <button
+        class="btn light"
+        onclick="loadPersonalAccounts()"
+      >
+        🔄 تازه‌سازی
+      </button>
     </div>
+    <!-- خلاصه حساب‌ها -->
+    <div
+      id="personalAccountsSummary"
+      style="
+        display:grid;
+        grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+        gap:10px;
+        margin:15px 0;
+      "
+    ></div>
+    <!-- جدول -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>شخص</th>
+            <th>نوع حساب</th>
+            <th>مبلغ</th>
+            <th>پرداخت‌شده</th>
+            <th>مانده</th>
+            <th>تاریخ</th>
+          </tr>
+        </thead>
+        <tbody id="personalAccountsTable">
+          <tr>
+            <td
+              colspan="6"
+              style="text-align:center"
+            >
+              ⏳ در حال دریافت حساب‌های شخصی...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
 
 </section>
 
@@ -2455,111 +2469,353 @@ async function loadWorkerActivities() {
 
 
 async function loadPersonalAccounts() {
-  const box = document.getElementById("personalAccountsList");
-  if (!box) return;
-  box.innerHTML = `
-    <div class="empty">
-      ⏳ در حال دریافت حساب‌های شخصی...
-    </div>
+
+  const table =
+    document.getElementById("personalAccountsTable");
+
+  const summary =
+    document.getElementById("personalAccountsSummary");
+
+  if (!table) {
+    console.error(
+      "personalAccountsTable پیدا نشد"
+    );
+    return;
+  }
+
+
+  table.innerHTML = `
+    <tr>
+      <td colspan="6" style="text-align:center">
+        ⏳ در حال دریافت حساب‌های شخصی...
+      </td>
+    </tr>
   `;
+
+
   try {
+
     const { data, error } = await sb
       .from("personal_accounts")
       .select("*")
-      .order("account_date", { ascending: false });
+      .order("account_date", {
+        ascending: false
+      });
+
+
     if (error) {
+      console.error(
+        "Supabase personal_accounts error:",
+        error
+      );
+
       throw error;
     }
-    console.log("PERSONAL ACCOUNTS:", data);
+
+
+    console.log(
+      "Personal accounts:",
+      data
+    );
+
+
     if (!data || data.length === 0) {
-      box.innerHTML = `
-        <div class="empty">
-          👤 هنوز حساب شخصی ثبت نشده.
-        </div>
+
+      table.innerHTML = `
+        <tr>
+          <td
+            colspan="6"
+            style="text-align:center"
+          >
+            👤 هنوز حساب شخصی ثبت نشده.
+          </td>
+        </tr>
       `;
+
+      if (summary) {
+        summary.innerHTML = "";
+      }
+
       return;
     }
-    box.innerHTML = data.map(item => {
-      const amount = Number(item.amount_toman || 0);
-      const paid = Number(item.paid_toman || 0);
-      const remaining = Math.max(amount - paid, 0);
-      const type = String(item.account_type || "").toLowerCase();
+
+
+    let totalDebt = 0;
+    let totalCredit = 0;
+
+
+    const formatMoney = value => {
+
+      return (
+        Number(value || 0)
+          .toLocaleString("fa-IR")
+        + " تومان"
+      );
+
+    };
+
+
+    const formatDate = value => {
+
+      if (!value) {
+        return "-";
+      }
+
+      const date = new Date(value);
+
+      if (isNaN(date.getTime())) {
+        return String(value);
+      }
+
+      return date.toLocaleDateString(
+        "fa-IR"
+      );
+
+    };
+
+
+    data.forEach(item => {
+
+      const amount =
+        Number(item.amount_toman || 0);
+
+      const paid =
+        Number(item.paid_toman || 0);
+
+      const remaining =
+        Math.max(
+          amount - paid,
+          0
+        );
+
+
+      const type =
+        String(
+          item.account_type || ""
+        ).toLowerCase();
+
+
       const isDebt =
         type === "debt" ||
-        type.includes("owe") ||
-        type.includes("debt");
-      const formatMoney = value =>
-        Number(value || 0).toLocaleString("fa-IR") + " تومان";
-      const formatDate = value => {
-        if (!value) return "-";
-        const d = new Date(value);
-        if (isNaN(d.getTime())) {
-          return String(value);
-        }
-        return d.toLocaleDateString("fa-IR");
-      };
-      const personName =
-        item.person_name || "بدون نام";
-      return `
-        <details open>
-          <summary>
-            👤 ${personName}
-            <span class="pill">
-              ${isDebt ? "💸 بدهکارم" : "💰 طلبکارم"}
-            </span>
-            <span class="${isDebt ? "danger" : "success"}">
-              ${formatMoney(remaining)}
-            </span>
-          </summary>
-          <div style="margin-top:12px">
-            <p>
-              <b>نوع حساب:</b>
-              ${isDebt ? "بدهکارم" : "طلبکارم"}
-            </p>
-            <p>
-              <b>مبلغ:</b>
-              ${formatMoney(amount)}
-            </p>
-            <p>
-              <b>پرداخت‌شده:</b>
-              ${formatMoney(paid)}
-            </p>
-            <p>
-              <b>مانده:</b>
-              <span class="${isDebt ? "danger" : "success"}">
-                <b>${formatMoney(remaining)}</b>
-              </span>
-            </p>
-            <p>
-              <b>📅 تاریخ:</b>
-              ${formatDate(item.account_date)}
-            </p>
-            ${
-              item.description
-                ? `
-                  <p>
-                    <b>📝 توضیحات:</b>
-                    ${item.description}
-                  </p>
-                `
-                : ""
-            }
+        type.includes("debt") ||
+        type.includes("owe");
+
+
+      if (isDebt) {
+
+        totalDebt += remaining;
+
+      } else {
+
+        totalCredit += remaining;
+
+      }
+
+    });
+
+
+    /* =========================
+       خلاصه
+       ========================= */
+
+    if (summary) {
+
+      summary.innerHTML = `
+
+        <div class="card">
+
+          <div class="muted">
+            💸 مجموع بدهی من
           </div>
-        </details>
+
+          <div
+            style="
+              font-size:20px;
+              font-weight:800;
+              margin-top:6px;
+            "
+          >
+            ${formatMoney(totalDebt)}
+          </div>
+
+        </div>
+
+
+        <div class="card">
+
+          <div class="muted">
+            💰 مجموع طلب من
+          </div>
+
+          <div
+            style="
+              font-size:20px;
+              font-weight:800;
+              margin-top:6px;
+            "
+          >
+            ${formatMoney(totalCredit)}
+          </div>
+
+        </div>
+
       `;
+
+    }
+
+
+    /* =========================
+       جدول
+       ========================= */
+
+    table.innerHTML = data.map(item => {
+
+      const amount =
+        Number(item.amount_toman || 0);
+
+      const paid =
+        Number(item.paid_toman || 0);
+
+      const remaining =
+        Math.max(
+          amount - paid,
+          0
+        );
+
+
+      const type =
+        String(
+          item.account_type || ""
+        ).toLowerCase();
+
+
+      const isDebt =
+        type === "debt" ||
+        type.includes("debt") ||
+        type.includes("owe");
+
+
+      const personName =
+        item.person_name ||
+        "بدون نام";
+
+
+      return `
+
+        <tr>
+
+          <td>
+
+            <b>
+              👤 ${personName}
+            </b>
+
+          </td>
+
+
+          <td>
+
+            <span class="pill">
+
+              ${
+                isDebt
+                  ? "💸 بدهکارم"
+                  : "💰 طلبکارم"
+              }
+
+            </span>
+
+          </td>
+
+
+          <td>
+
+            ${formatMoney(amount)}
+
+          </td>
+
+
+          <td>
+
+            ${formatMoney(paid)}
+
+          </td>
+
+
+          <td>
+
+            <b
+              class="${
+                isDebt
+                  ? "danger"
+                  : "success"
+              }"
+            >
+
+              ${formatMoney(remaining)}
+
+            </b>
+
+          </td>
+
+
+          <td>
+
+            ${formatDate(
+              item.account_date
+            )}
+
+          </td>
+
+        </tr>
+
+      `;
+
     }).join("");
-  } catch (e) {
-    console.error("PERSONAL ACCOUNTS ERROR:", e);
-    box.innerHTML = `
-      <div class="notice error-box">
-        ❌ خطا در دریافت حساب‌های شخصی
-        <br><br>
-        <small>
-          ${e?.message || String(e)}
-        </small>
-      </div>
+
+
+  } catch (error) {
+
+    console.error(
+      "PERSONAL ACCOUNTS ERROR:",
+      error
+    );
+
+
+    table.innerHTML = `
+
+      <tr>
+
+        <td
+          colspan="6"
+          style="
+            text-align:center;
+            color:#b91c1c;
+            padding:20px;
+          "
+        >
+
+          ❌ خطا در دریافت حساب‌های شخصی
+
+          <br><br>
+
+          <small>
+
+            ${
+              error?.message ||
+              String(error)
+            }
+
+          </small>
+
+        </td>
+
+      </tr>
+
     `;
+
   }
+
 }
 /* =====================================================
    START
