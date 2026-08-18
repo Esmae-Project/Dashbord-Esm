@@ -382,7 +382,10 @@ if (typeof supabase === "undefined") {
   notice.style.color = "#991b1b";
   notice.innerHTML = "❌ کتابخانه Supabase روی سایت لود نشده است.";
 } else {
-  sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+document.getElementById("connectionNotice").textContent =
+  "🟢 Supabase library loaded";
 }
 
     let db = { projects: {}, contractors: {} };
