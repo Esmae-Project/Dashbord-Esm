@@ -2456,33 +2456,21 @@ async function loadWorkerActivities() {
 
 async function loadPersonalAccounts() {
   const box = document.getElementById("personalAccountsList");
-
   if (!box) return;
-
   box.innerHTML = `
     <div class="empty">
       ⏳ در حال دریافت حساب‌های شخصی...
     </div>
   `;
-
   try {
     const { data, error } = await sb
       .from("personal_accounts")
-      .select(`
-        id,
-        person_name,
-        account_type,
-        amount_toman,
-        paid_toman,
-        account_date,
-        description,
-        status
-      `)
-      .order("account_date", { ascending: false })
-      .order("created_at", { ascending: false });
-
-    if (error) throw error;
-
+      .select("*")
+      .order("account_date", { ascending: false });
+    if (error) {
+      throw error;
+    }
+    console.log("PERSONAL ACCOUNTS:", data);
     if (!data || data.length === 0) {
       box.innerHTML = `
         <div class="empty">
@@ -2491,88 +2479,88 @@ async function loadPersonalAccounts() {
       `;
       return;
     }
-
     box.innerHTML = data.map(item => {
-
       const amount = Number(item.amount_toman || 0);
       const paid = Number(item.paid_toman || 0);
       const remaining = Math.max(amount - paid, 0);
-
-      const isDebt = item.account_type === "debt";
-
+      const type = String(item.account_type || "").toLowerCase();
+      const isDebt =
+        type === "debt" ||
+        type.includes("owe") ||
+        type.includes("debt");
+      const formatMoney = value =>
+        Number(value || 0).toLocaleString("fa-IR") + " تومان";
+      const formatDate = value => {
+        if (!value) return "-";
+        const d = new Date(value);
+        if (isNaN(d.getTime())) {
+          return String(value);
+        }
+        return d.toLocaleDateString("fa-IR");
+      };
+      const personName =
+        item.person_name || "بدون نام";
       return `
-        <details>
+        <details open>
           <summary>
-            👤 ${esc(item.person_name)}
-
+            👤 ${personName}
             <span class="pill">
               ${isDebt ? "💸 بدهکارم" : "💰 طلبکارم"}
             </span>
-
             <span class="${isDebt ? "danger" : "success"}">
-              ${money(remaining)}
+              ${formatMoney(remaining)}
             </span>
           </summary>
-
           <div style="margin-top:12px">
-
             <p>
               <b>نوع حساب:</b>
               ${isDebt ? "بدهکارم" : "طلبکارم"}
             </p>
-
             <p>
               <b>مبلغ:</b>
-              ${money(amount)}
+              ${formatMoney(amount)}
             </p>
-
             <p>
               <b>پرداخت‌شده:</b>
-              ${money(paid)}
+              ${formatMoney(paid)}
             </p>
-
             <p>
               <b>مانده:</b>
               <span class="${isDebt ? "danger" : "success"}">
-                <b>${money(remaining)}</b>
+                <b>${formatMoney(remaining)}</b>
               </span>
             </p>
-
             <p>
               <b>📅 تاریخ:</b>
-              ${dateFa(item.account_date) || "-"}
+              ${formatDate(item.account_date)}
             </p>
-
             ${
               item.description
                 ? `
                   <p>
                     <b>📝 توضیحات:</b>
-                    ${esc(item.description)}
+                    ${item.description}
                   </p>
                 `
                 : ""
             }
-
           </div>
         </details>
       `;
     }).join("");
-
   } catch (e) {
-
     console.error("PERSONAL ACCOUNTS ERROR:", e);
-
     box.innerHTML = `
       <div class="notice error-box">
         ❌ خطا در دریافت حساب‌های شخصی
-        <br>
-        <small>${esc(e?.message || String(e))}</small>
+        <br><br>
+        <small>
+          ${e?.message || String(e)}
+        </small>
       </div>
     `;
   }
 }
-    
 /* =====================================================
    START
 ===================================================== */
