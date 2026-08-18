@@ -455,48 +455,145 @@ if (typeof supabase === "undefined") {
     function balance(n) { return totalWork(n) - totalPayments(n) }
 
     async function loadData() {
-      const notice = document.getElementById("connectionNotice");
-      try {
-        const [pRes, cRes, tRes] = await Promise.all([
-          sb.from("projects").select("id,name,employer,created_at").order("name"),
-          sb.from("contractors").select("id,name,created_at").order("name"),
-          sb.from("transactions").select(
-            "id,contractor_id,project_id,type,description,amount_toman,transaction_date,status,created_at"
-          ).order("created_at", { ascending: true })
-        ]);
-        if (pRes.error) throw pRes.error;
-        if (cRes.error) throw cRes.error;
-        if (tRes.error) throw tRes.error;
+  const notice = document.getElementById("connectionNotice");
 
-        db = { projects: {}, contractors: {} };
+  notice.className = "notice";
+  notice.style.background = "#fff7ed";
+  notice.style.borderColor = "#fed7aa";
+  notice.style.color = "#9a3412";
+  notice.textContent = "🟡 در حال تست اتصال به Supabase...";
 
-        (pRes.data || []).forEach(p => {
-          db.projects[p.name] = { id: p.id, employer: p.employer || null, tasks: INITIAL_TASKS[p.name] || [],
-            completed: [] };
-        });
+  try {
 
-        (cRes.data || []).forEach(c => db.contractors[c.name] = { id: c.id, work: [], payments: [] });
+    // تست پروژه‌ها
+    notice.textContent = "🟡 مرحله ۱: بررسی projects...";
 
-        const cById = Object.fromEntries((cRes.data || []).map(c => [c.id, c.name]));
-        const pById = Object.fromEntries((pRes.data || []).map(p => [p.id, p.name]));
+    const pRes = await sb
+      .from("projects")
+      .select("id,name,employer,created_at")
+      .order("name");
 
-        (tRes.data || []).forEach(t => {
-          const contractor = cById[t.contractor_id],
-            project = pById[t.project_id];
-          if (!contractor || !db.contractors[contractor]) return;
-          const item = { id: t.id, project: project || "نامشخص", description: t.description || "", amount: Number(t
-              .amount_toman || 0), date: t.transaction_date, status: t.status };
-          if (t.type === "work") db.contractors[contractor].work.push(item);
-          else if (t.type === "payment") db.contractors[contractor].payments.push(item);
-        });
+    if (pRes.error) {
+      throw new Error(
+        "خطا در جدول projects: " +
+        pRes.error.message
+      );
+    }
 
-        notice.className = "notice";
-        notice.style.background = "#ecfdf5";
-        notice.style.borderColor = "#a7f3d0";
-        notice.style.color = "#166534";
-        notice.textContent = "✅ اتصال آنلاین به Supabase موفق است.";
-        render();
-      } catch (e) {
+    // تست پیمانکارها
+    notice.textContent = "🟡 مرحله ۲: بررسی contractors...";
+
+    const cRes = await sb
+      .from("contractors")
+      .select("id,name,created_at")
+      .order("name");
+
+    if (cRes.error) {
+      throw new Error(
+        "خطا در جدول contractors: " +
+        cRes.error.message
+      );
+    }
+
+    // تست تراکنش‌ها
+    notice.textContent = "🟡 مرحله ۳: بررسی transactions...";
+
+    const tRes = await sb
+      .from("transactions")
+      .select(
+        "id,contractor_id,project_id,type,description,amount_toman,transaction_date,status,created_at"
+      )
+      .order("created_at", {
+        ascending: true
+      });
+
+    if (tRes.error) {
+      throw new Error(
+        "خطا در جدول transactions: " +
+        tRes.error.message
+      );
+    }
+
+    // ساخت دیتابیس داخل سایت
+    db = {
+      projects: {},
+      contractors: {}
+    };
+
+    (pRes.data || []).forEach(p => {
+
+      db.projects[p.name] = {
+        id: p.id,
+        employer: p.employer || null,
+        tasks: INITIAL_TASKS[p.name] || [],
+        completed: []
+      };
+
+    });
+
+    (cRes.data || []).forEach(c => {
+
+      db.contractors[c.name] = {
+        id: c.id,
+        work: [],
+        payments: []
+      };
+
+    });
+
+    const cById = Object.fromEntries(
+      (cRes.data || []).map(c => [c.id, c.name])
+    );
+
+    const pById = Object.fromEntries(
+      (pRes.data || []).map(p => [p.id, p.name])
+    );
+
+    (tRes.data || []).forEach(t => {
+
+      const contractor = cById[t.contractor_id];
+      const project = pById[t.project_id];
+
+      if (
+        !contractor ||
+        !db.contractors[contractor]
+      ) {
+        return;
+      }
+
+      const item = {
+        id: t.id,
+        project: project || "نامشخص",
+        description: t.description || "",
+        amount: Number(t.amount_toman || 0),
+        date: t.transaction_date,
+        status: t.status
+      };
+
+      if (t.type === "work") {
+
+        db.contractors[contractor].work.push(item);
+
+      } else if (t.type === "payment") {
+
+        db.contractors[contractor].payments.push(item);
+
+      }
+
+    });
+
+    notice.className = "notice";
+    notice.style.background = "#ecfdf5";
+    notice.style.borderColor = "#a7f3d0";
+    notice.style.color = "#166534";
+
+    notice.textContent =
+      "✅ اتصال آنلاین به Supabase موفق است.";
+
+    render();
+
+  } catch (e) {
+
     console.error("SUPABASE ERROR:", e);
 
     notice.className = "notice";
@@ -505,11 +602,13 @@ if (typeof supabase === "undefined") {
     notice.style.color = "#991b1b";
 
     notice.innerHTML =
-        "❌ خطای Supabase<br><small>" +
-        (e?.message || String(e)) +
-        "</small>";
+      "❌ خطای Supabase:<br><br>" +
+      "<b>" +
+      String(e?.message || e) +
+      "</b>";
+
+  }
 }
-    }
 
     function render() {
       buildNavigation();
