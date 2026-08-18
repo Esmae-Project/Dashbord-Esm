@@ -10,299 +10,308 @@
 *{box-sizing:border-box}
 
 body{
-margin:0;
-background:#f3f4f6;
-color:#111827;
-font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif
+    margin:0;
+    background:#f3f4f6;
+    color:#111827;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif;
 }
 
 .app{
-max-width:1100px;
-margin:auto;
-padding:14px
+    max-width:1100px;
+    margin:auto;
+    padding:14px;
 }
 
 header{
-background:linear-gradient(135deg,#111827,#263449);
-color:white;
-border-radius:24px;
-padding:22px;
-margin-bottom:14px
+    background:linear-gradient(135deg,#111827,#263449);
+    color:white;
+    border-radius:24px;
+    padding:22px;
+    margin-bottom:14px;
 }
 
 .header{
-display:flex;
-justify-content:space-between;
-align-items:center
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
 }
 
 h1{
-margin:0;
-font-size:22px
+    margin:0;
+    font-size:22px;
 }
 
 .subtitle{
-color:#cbd5e1;
-font-size:13px;
-margin-top:7px
+    color:#cbd5e1;
+    font-size:13px;
+    margin-top:7px;
 }
 
 nav{
-display:flex;
-gap:7px;
-overflow-x:auto;
-padding-bottom:12px
+    display:flex;
+    gap:7px;
+    overflow-x:auto;
+    padding-bottom:12px;
 }
 
 nav button{
-white-space:nowrap;
-border:1px solid #e5e7eb;
-background:white;
-color:#374151;
-padding:10px 14px;
-border-radius:12px;
-cursor:pointer
+    white-space:nowrap;
+    border:1px solid #e5e7eb;
+    background:white;
+    color:#374151;
+    padding:10px 14px;
+    border-radius:12px;
+    cursor:pointer;
 }
 
 nav button.active{
-background:#111827;
-color:white
+    background:#111827;
+    color:white;
+    border-color:#111827;
 }
 
 .view{
-display:none
+    display:none;
 }
 
 .view.active{
-display:block
+    display:block;
 }
 
 .grid{
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:10px
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
 }
 
 .cards{
-display:grid;
-grid-template-columns:repeat(2,1fr);
-gap:10px
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
 }
 
 .card{
-background:white;
-border:1px solid #e5e7eb;
-border-radius:18px;
-padding:16px;
-box-shadow:0 5px 18px #0000000a
+    background:white;
+    border:1px solid #e5e7eb;
+    border-radius:18px;
+    padding:16px;
+    box-shadow:0 5px 18px #0000000a;
 }
 
 .stat small{
-color:#6b7280
+    color:#6b7280;
 }
 
 .stat strong{
-display:block;
-font-size:19px;
-margin-top:7px
+    display:block;
+    font-size:19px;
+    margin-top:7px;
 }
 
 .row{
-display:flex;
-justify-content:space-between;
-align-items:center;
-gap:10px
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
 }
 
 .section{
-margin-top:18px
+    margin-top:18px;
 }
 
 .section h2{
-font-size:18px
+    font-size:18px;
 }
 
 .muted{
-color:#6b7280;
-font-size:13px
+    color:#6b7280;
+    font-size:13px;
 }
 
 .danger{
-color:#dc2626
+    color:#dc2626;
 }
 
 .success{
-color:#16a34a
+    color:#16a34a;
 }
 
 .pill{
-background:#f3f4f6;
-padding:5px 9px;
-border-radius:99px;
-font-size:12px
+    background:#f3f4f6;
+    padding:5px 9px;
+    border-radius:99px;
+    font-size:12px;
 }
 
 .task{
-display:flex;
-align-items:center;
-gap:9px;
-padding:10px 0;
-border-bottom:1px solid #eee
+    display:flex;
+    align-items:center;
+    gap:9px;
+    padding:10px 0;
+    border-bottom:1px solid #eee;
 }
 
 .task:last-child{
-border-bottom:0
+    border-bottom:0;
 }
 
 .dot{
-width:10px;
-height:10px;
-border-radius:50%;
-flex:none
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    flex:none;
 }
 
 .red{
-background:#ef4444
+    background:#ef4444;
 }
 
 .yellow{
-background:#f59e0b
-}
-
-.green-dot{
-background:#22c55e
+    background:#f59e0b;
 }
 
 .toolbar{
-display:flex;
-gap:8px;
-flex-wrap:wrap;
-margin-bottom:12px
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:12px;
 }
 
 .btn{
-border:0;
-background:#111827;
-color:white;
-padding:10px 14px;
-border-radius:12px;
-cursor:pointer
+    border:0;
+    background:#111827;
+    color:white;
+    padding:10px 14px;
+    border-radius:12px;
+    cursor:pointer;
 }
 
 .btn.green{
-background:#16a34a
+    background:#16a34a;
 }
 
 .btn.red{
-background:#dc2626
+    background:#dc2626;
 }
 
 .btn.light{
-background:white;
-color:#111827;
-border:1px solid #e5e7eb
+    background:white;
+    color:#111827;
+    border:1px solid #e5e7eb;
 }
 
 .table-wrap{
-overflow:auto;
-border:1px solid #e5e7eb;
-border-radius:16px
+    overflow:auto;
+    border:1px solid #e5e7eb;
+    border-radius:16px;
 }
 
 table{
-width:100%;
-border-collapse:collapse;
-background:white
+    width:100%;
+    border-collapse:collapse;
+    background:white;
 }
 
 th,td{
-padding:11px;
-text-align:right;
-border-bottom:1px solid #eee;
-font-size:13px
+    padding:11px;
+    text-align:right;
+    border-bottom:1px solid #eee;
+    font-size:13px;
 }
 
 th{
-background:#f9fafb
+    background:#f9fafb;
 }
 
 details{
-margin-top:9px;
-border:1px solid #eee;
-border-radius:12px;
-padding:10px
+    margin-top:9px;
+    border:1px solid #eee;
+    border-radius:12px;
+    padding:10px;
 }
 
 summary{
-cursor:pointer;
-font-weight:bold
+    cursor:pointer;
+    font-weight:bold;
 }
 
 .modal{
-display:none;
-position:fixed;
-inset:0;
-background:#0008;
-z-index:100;
-align-items:flex-end;
-justify-content:center;
-padding:10px
+    display:none;
+    position:fixed;
+    inset:0;
+    background:#0008;
+    z-index:100;
+    align-items:flex-end;
+    justify-content:center;
+    padding:10px;
 }
 
 .modal.show{
-display:flex
+    display:flex;
 }
 
 .modal-box{
-background:white;
-width:min(650px,100%);
-max-height:90vh;
-overflow:auto;
-border-radius:22px;
-padding:18px
+    background:white;
+    width:min(650px,100%);
+    max-height:90vh;
+    overflow:auto;
+    border-radius:22px;
+    padding:18px;
 }
 
 .empty{
-background:white;
-border:1px dashed #d1d5db;
-border-radius:16px;
-padding:30px;
-text-align:center;
-color:#6b7280
+    background:white;
+    border:1px dashed #d1d5db;
+    border-radius:16px;
+    padding:30px;
+    text-align:center;
+    color:#6b7280;
 }
 
 .notice{
-background:#fff7ed;
-border:1px solid #fed7aa;
-color:#9a3412;
-border-radius:14px;
-padding:12px;
-margin-bottom:12px;
-font-size:13px;
-word-break:break-word
+    background:#fff7ed;
+    border:1px solid #fed7aa;
+    color:#9a3412;
+    border-radius:14px;
+    padding:12px;
+    margin-bottom:12px;
+    font-size:13px;
+    line-height:1.8;
+}
+
+.notice.success-box{
+    background:#ecfdf5;
+    border-color:#a7f3d0;
+    color:#166534;
+}
+
+.notice.error-box{
+    background:#fef2f2;
+    border-color:#fecaca;
+    color:#991b1b;
+    word-break:break-word;
 }
 
 footer{
-text-align:center;
-color:#6b7280;
-font-size:12px;
-padding:25px 0
+    text-align:center;
+    color:#6b7280;
+    font-size:12px;
+    padding:25px 0;
 }
 
 @media(max-width:700px){
 
-.grid{
-grid-template-columns:repeat(2,1fr)
-}
+    .grid{
+        grid-template-columns:repeat(2,1fr);
+    }
 
-.cards{
-grid-template-columns:1fr
-}
+    .cards{
+        grid-template-columns:1fr;
+    }
 
-h1{
-font-size:20px
-}
-
+    h1{
+        font-size:20px;
+    }
 }
 </style>
 </head>
@@ -312,165 +321,189 @@ font-size:20px
 <div class="app">
 
 <header>
+    <div class="header">
+        <div>
+            <h1>🏗️ داشبورد مدیریت پروژه یاشار</h1>
+            <div class="subtitle">
+                پروژه‌ها • پیمانکاران • حسابداری • کارفرماها
+            </div>
+        </div>
 
-<div class="header">
-
-<div>
-
-<h1>🏗️ داشبورد مدیریت پروژه یاشار</h1>
-
-<div class="subtitle">
-پروژه‌ها • پیمانکاران • حسابداری • کارفرماها
-</div>
-
-</div>
-
-<button class="btn" onclick="openModal()">
-⚙️
-</button>
-
-</div>
-
+        <button class="btn" onclick="openModal('data')">
+            ⚙️
+        </button>
+    </div>
 </header>
 
-
 <div id="connectionNotice" class="notice">
-در حال اتصال به Supabase...
+    🔄 در حال اتصال به Supabase...
 </div>
-
 
 <nav id="nav"></nav>
 
 
+<!-- DASHBOARD -->
+
 <section id="dashboard" class="view active">
 
-<div id="stats" class="grid"></div>
+    <div id="stats" class="grid"></div>
 
-<div class="section">
+    <div class="section">
+        <h2>👷 پیمانکاران</h2>
+        <div id="contractorCards" class="cards"></div>
+    </div>
 
-<h2>👷 پیمانکاران</h2>
-
-<div id="contractorCards" class="cards"></div>
-
-</div>
-
-
-<div class="section">
-
-<h2>🏢 آرتا پیشرو</h2>
-
-<div id="employerCard" class="card"></div>
-
-</div>
+    <div class="section">
+        <h2>🏢 آرتا پیشرو</h2>
+        <div id="employerCard" class="card"></div>
+    </div>
 
 </section>
 
+
+<!-- PROJECTS -->
 
 <section id="projects" class="view">
 
-<div id="projectsList" class="cards"></div>
+    <div class="toolbar">
+        <button class="btn" onclick="showOnlineEntryHelp()">
+            ＋ پروژه جدید
+        </button>
+    </div>
+
+    <div id="projectsList" class="cards"></div>
 
 </section>
 
+
+<!-- CONTRACTORS -->
 
 <section id="contractors" class="view">
 
-<div id="contractorsList"></div>
+    <div class="toolbar">
+        <button class="btn" onclick="showOnlineEntryHelp()">
+            ＋ پیمانکار جدید
+        </button>
+    </div>
+
+    <div id="contractorsList"></div>
 
 </section>
 
+
+<!-- ACCOUNTING -->
 
 <section id="accounting" class="view">
 
-<div class="table-wrap">
+    <div class="toolbar">
 
-<table>
+        <button class="btn" onclick="showOnlineEntryHelp()">
+            ＋ کار انجام‌شده
+        </button>
 
-<thead>
+        <button class="btn green" onclick="showOnlineEntryHelp()">
+            ＋ پرداخت
+        </button>
 
-<tr>
+    </div>
 
-<th>پیمانکار</th>
-<th>کار انجام‌شده</th>
-<th>پرداخت</th>
-<th>مانده</th>
+    <div class="table-wrap">
 
-</tr>
+        <table>
 
-</thead>
+            <thead>
+                <tr>
+                    <th>پیمانکار</th>
+                    <th>کار انجام‌شده</th>
+                    <th>پرداخت</th>
+                    <th>مانده</th>
+                </tr>
+            </thead>
 
-<tbody id="accounts"></tbody>
+            <tbody id="accounts"></tbody>
 
-</table>
+        </table>
 
-</div>
+    </div>
 
 </section>
 
+
+<!-- TASKS -->
 
 <section id="tasks" class="view">
 
-<div id="tasksList" class="cards"></div>
+    <div class="toolbar">
+
+        <button class="btn" onclick="showOnlineEntryHelp()">
+            ＋ کار جدید
+        </button>
+
+    </div>
+
+    <div id="tasksList" class="cards"></div>
 
 </section>
 
+
+<!-- EMPLOYERS -->
 
 <section id="employers" class="view">
 
-<div id="employersList" class="cards"></div>
+    <div id="employersList" class="cards"></div>
 
 </section>
 
+
+<!-- INVENTORY -->
 
 <section id="inventory" class="view">
 
-<div class="empty">
-
-📦 بخش انبار
-
-<br><br>
-
-ساختار این بخش آماده توسعه است.
-
-</div>
+    <div class="empty">
+        📦 بخش انبار
+        <br><br>
+        ساختار این بخش آماده توسعه است.
+    </div>
 
 </section>
 
 
+<!-- PURCHASES -->
+
 <section id="purchases" class="view">
 
-<div class="empty">
-
-🛒 بخش خرید
-
-<br><br>
-
-ساختار این بخش آماده توسعه است.
-
-</div>
+    <div class="empty">
+        🛒 بخش خرید
+        <br><br>
+        ساختار این بخش آماده توسعه است.
+    </div>
 
 </section>
 
 
 <footer>
 
-اطلاعات حسابداری از Supabase به‌صورت آنلاین خوانده می‌شود.
+    اطلاعات حسابداری از Supabase به‌صورت آنلاین خوانده می‌شود.
 
-<br>
+    <br>
 
-ثبت تغییرات حسابداری از داخل ChatGPT انجام می‌شود.
+    ثبت تغییرات حسابداری فعلاً از داخل ChatGPT انجام می‌شود.
 
 </footer>
 
 </div>
 
 
+<!-- MODAL -->
+
 <div id="modal" class="modal">
 
-<div id="modalBox" class="modal-box"></div>
+    <div id="modalBox" class="modal-box"></div>
 
 </div>
 
+
+<!-- SUPABASE -->
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -478,51 +511,73 @@ font-size:20px
 <script>
 
 /* =====================================================
-   SUPABASE
+   SUPABASE CONFIG
 ===================================================== */
 
 const SUPABASE_URL =
-"https://tqjkourdfxcdopstqrzp.supabase.co";
+    "https://tqjkourdfxcdopstqrzp.supabase.co";
 
+
+/*
+   یاشار:
+   فقط مقدار زیر را با Publishable Key واقعی خودت عوض کن.
+*/
 
 const SUPABASE_KEY =
-"sb_publishable_WfWO41Jr6Ix03fa1tv9txg_fQ8Dd3qw";
+    "sb_publishable_WfWO41Jr6Ix03fa1tv9txg_fQ8Dd3qw";
 
 
-let sb;
+/* =====================================================
+   CREATE CLIENT
+===================================================== */
 
+let sb = null;
 
 try{
 
-if(
-typeof supabase === "undefined"
-){
+    if(
+        !SUPABASE_KEY ||
+        SUPABASE_KEY === "PASTE_YOUR_PUBLISHABLE_KEY_HERE"
+    ){
 
-throw new Error(
-"کتابخانه Supabase از CDN بارگذاری نشد."
-);
+        throw new Error(
+            "Publishable Key هنوز داخل فایل قرار نگرفته است."
+        );
 
-}
+    }
 
-sb =
-supabase.createClient(
-SUPABASE_URL,
-SUPABASE_KEY
-);
+    sb =
+        supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_KEY
+        );
 
-}catch(error){
-
-showConnectionError(
-"خطا در راه‌اندازی Supabase: "+
-error.message
-);
+    console.log(
+        "SUPABASE CLIENT CREATED"
+    );
 
 }
 
+catch(error){
 
-let db={
-projects:{},
-contractors:{}
+    showConnectionError(
+        "خطا در ساخت اتصال Supabase",
+        error
+    );
+
+}
+
+
+/* =====================================================
+   DATABASE
+===================================================== */
+
+let db = {
+
+    projects:{},
+
+    contractors:{}
+
 };
 
 
@@ -530,32 +585,32 @@ contractors:{}
    INITIAL TASKS
 ===================================================== */
 
-const INITIAL_TASKS={
+const INITIAL_TASKS = {
 
 "خاوران":[
 
-["اجرای نرده راه پله","red"],
-["کاشی کاری لابی","yellow"],
-["ورودی جلوی آسانسور","yellow"],
-["راه اندازی آسانسور","yellow"],
-["سقف کاذب پارکینگ","yellow"],
-["نصبیات برقی","yellow"],
-["کف حیاط","yellow"],
-["کف پارکینگ","yellow"],
-["اصلاحیه وال مش","yellow"]
+    ["اجرای نرده راه پله","red"],
+    ["کاشی کاری لابی","yellow"],
+    ["ورودی جلوی آسانسور","yellow"],
+    ["راه اندازی آسانسور","yellow"],
+    ["سقف کاذب پارکینگ","yellow"],
+    ["نصبیات برقی","yellow"],
+    ["کف حیاط","yellow"],
+    ["کف پارکینگ","yellow"],
+    ["اصلاحیه وال مش","yellow"]
 
 ],
 
 "باغ فردوس":[
 
-["اجرای وال پست های طبقات","yellow"],
-["اجرای دیوار های طبقات بعد اجرای وال پست","yellow"]
+    ["اجرای وال پست های طبقات","yellow"],
+    ["اجرای دیوار های طبقات بعد اجرای وال پست","yellow"]
 
 ],
 
 "گازران":[
 
-["تمیزکاری روی آهن ها","yellow"]
+    ["تمیزکاری روی آهن ها","yellow"]
 
 ],
 
@@ -563,7 +618,7 @@ const INITIAL_TASKS={
 
 "قطب":[
 
-["تمیزکاری و ضدزنگ زنی درب","yellow"]
+    ["تمیزکاری و ضدزنگ زنی درب","yellow"]
 
 ],
 
@@ -571,8 +626,8 @@ const INITIAL_TASKS={
 
 "همایش":[
 
-["اجرای دیوار","yellow"],
-["سیمانکاری","yellow"]
+    ["اجرای دیوار","yellow"],
+    ["سیمانکاری","yellow"]
 
 ]
 
@@ -585,54 +640,54 @@ const INITIAL_TASKS={
 
 function money(number){
 
-return new Intl.NumberFormat(
-"fa-IR"
-).format(
-Number(number)||0
-)+" تومان";
+    return new Intl.NumberFormat(
+        "fa-IR"
+    ).format(
+        Number(number)||0
+    ) + " تومان";
 
 }
 
 
 function dateFa(date){
 
-if(!date)return "";
+    if(!date)return null;
 
-try{
+    try{
 
-return new Date(
-date+"T00:00:00"
-).toLocaleDateString("fa-IR");
+        return new Date(
+            date + "T00:00:00"
+        ).toLocaleDateString("fa-IR");
 
-}catch(e){
+    }
 
-return date;
+    catch{
 
-}
+        return date;
+
+    }
 
 }
 
 
 function esc(text){
 
-return String(
-text??""
-).replace(
-/[&<>"']/g,
-function(c){
+    return String(
+        text ?? ""
+    ).replace(
+        /[&<>"']/g,
 
-return {
+        c=>({
 
-"&":"&amp;",
-"<":"&lt;",
-">":"&gt;",
-'"':"&quot;",
-"'":"&#039;"
+            "&":"&amp;",
+            "<":"&lt;",
+            ">":"&gt;",
+            '"':"&quot;",
+            "'":"&#039;"
 
-}[c];
+        }[c])
 
-}
-);
+    );
 
 }
 
@@ -641,24 +696,59 @@ return {
    CONNECTION ERROR
 ===================================================== */
 
-function showConnectionError(message){
+function showConnectionError(
+    title,
+    error
+){
 
-const notice=
-document.getElementById(
-"connectionNotice"
-);
+    const notice =
+        document.getElementById(
+            "connectionNotice"
+        );
 
-if(!notice)return;
+    if(!notice)return;
 
-notice.style.background="#fef2f2";
+    notice.className =
+        "notice error-box";
 
-notice.style.borderColor="#fecaca";
+    notice.innerHTML =
 
-notice.style.color="#991b1b";
+        "❌ <b>" +
+        esc(title) +
+        "</b>" +
 
-notice.innerHTML=
-"❌ <b>خطا در اتصال به Supabase</b><br>"+
-"<small>"+esc(message)+"</small>";
+        "<br><br>" +
+
+        "<small>" +
+
+        esc(
+            error?.message ||
+            String(error)
+        ) +
+
+        "</small>";
+
+}
+
+
+/* =====================================================
+   CONNECTION SUCCESS
+===================================================== */
+
+function showConnectionSuccess(
+    message
+){
+
+    const notice =
+        document.getElementById(
+            "connectionNotice"
+        );
+
+    notice.className =
+        "notice success-box";
+
+    notice.textContent =
+        "✅ " + message;
 
 }
 
@@ -669,435 +759,554 @@ notice.innerHTML=
 
 function buildNavigation(){
 
-const items=[
+    const items = [
 
-["dashboard","🏠 داشبورد"],
-["projects","🏗️ پروژه‌ها"],
-["contractors","👷 پیمانکاران"],
-["accounting","💰 حسابداری"],
-["tasks","📋 کارها"],
-["employers","🏢 کارفرماها"],
-["inventory","📦 انبار"],
-["purchases","🛒 خرید"]
+        ["dashboard","🏠 داشبورد"],
+        ["projects","🏗️ پروژه‌ها"],
+        ["contractors","👷 پیمانکاران"],
+        ["accounting","💰 حسابداری"],
+        ["tasks","📋 کارها"],
+        ["employers","🏢 کارفرماها"],
+        ["inventory","📦 انبار"],
+        ["purchases","🛒 خرید"]
 
-];
+    ];
 
+    document.getElementById(
+        "nav"
+    ).innerHTML =
 
-document.getElementById("nav").innerHTML=
+        items.map(
+            (item,index)=>`
 
-items.map(
-function(item,index){
+            <button
+                class="${
+                    index===0
+                    ?
+                    "active"
+                    :
+                    ""
+                }"
 
-return `
+                onclick="
+                    goTo(
+                        '${item[0]}',
+                        this
+                    )
+                "
+            >
 
-<button
-class="${index===0?"active":""}"
-onclick="goTo('${item[0]}',this)"
->
+                ${item[1]}
 
-${item[1]}
+            </button>
 
-</button>
-
-`;
+            `
+        ).join("");
 
 }
-).join("");
-
-}
 
 
-function goTo(id,button){
+function goTo(
+    id,
+    button
+){
 
-document
-.querySelectorAll("nav button")
-.forEach(
-b=>b.classList.remove("active")
-);
+    document
+        .querySelectorAll(
+            "nav button"
+        )
+        .forEach(
+            b=>b.classList.remove(
+                "active"
+            )
+        );
 
-button.classList.add("active");
+    button.classList.add(
+        "active"
+    );
 
+    document
+        .querySelectorAll(
+            ".view"
+        )
+        .forEach(
+            v=>v.classList.remove(
+                "active"
+            )
+        );
 
-document
-.querySelectorAll(".view")
-.forEach(
-v=>v.classList.remove("active")
-);
-
-
-document
-.getElementById(id)
-.classList.add("active");
+    document
+        .getElementById(id)
+        .classList.add(
+            "active"
+        );
 
 }
 
 
 /* =====================================================
-   ACCOUNTING
+   ACCOUNTING HELPERS
 ===================================================== */
 
 function totalWork(name){
 
-return (
+    return (
 
-db.contractors[name]?.work||[]
+        db.contractors[name]?.work || []
 
-)
+    )
 
-.filter(
-item=>item.status!=="replaced"
-)
+    .filter(
+        item =>
+            item.status !== "replaced"
+    )
 
-.reduce(
+    .reduce(
 
-(sum,item)=>
-sum+
-Number(item.amount||0),
+        (sum,item)=>
+            sum +
+            Number(
+                item.amount || 0
+            ),
 
-0
+        0
 
-);
+    );
 
 }
 
 
 function totalPayments(name){
 
-return (
+    return (
 
-db.contractors[name]?.payments||[]
+        db.contractors[name]?.payments || []
 
-)
+    )
 
-.filter(
-item=>item.status!=="replaced"
-)
+    .reduce(
 
-.reduce(
+        (sum,item)=>
+            sum +
+            Number(
+                item.amount || 0
+            ),
 
-(sum,item)=>
-sum+
-Number(item.amount||0),
+        0
 
-0
-
-);
+    );
 
 }
 
 
 function balance(name){
 
-return
-totalWork(name)-
-totalPayments(name);
+    return (
+
+        totalWork(name)
+        -
+        totalPayments(name)
+
+    );
 
 }
 
 
 /* =====================================================
-   LOAD SUPABASE
+   SUPABASE TEST
+===================================================== */
+
+async function testSupabase(){
+
+    if(!sb){
+
+        throw new Error(
+            "Supabase client ساخته نشده است."
+        );
+
+    }
+
+
+    console.log(
+        "Testing Supabase..."
+    );
+
+
+    /*
+       ابتدا فقط projects را تست می‌کنیم.
+       اگر این مرحله جواب بدهد یعنی:
+       URL + Key + CDN + Data API
+       همگی درست هستند.
+    */
+
+    const result =
+        await sb
+        .from("projects")
+        .select("id,name")
+        .limit(1);
+
+
+    console.log(
+        "PROJECT TEST RESULT:",
+        result
+    );
+
+
+    if(result.error){
+
+        throw result.error;
+
+    }
+
+
+    return true;
+
+}
+
+
+/* =====================================================
+   LOAD DATA
 ===================================================== */
 
 async function loadData(){
 
-const notice=
-document.getElementById(
-"connectionNotice"
-);
+    const notice =
+        document.getElementById(
+            "connectionNotice"
+        );
 
 
-notice.style.background="#fff7ed";
+    notice.className =
+        "notice";
 
-notice.style.borderColor="#fed7aa";
+    notice.textContent =
+        "🔄 در حال اتصال به Supabase...";
 
-notice.style.color="#9a3412";
 
-notice.textContent=
-"⏳ در حال اتصال به Supabase...";
+    try{
 
+        await testSupabase();
 
-try{
 
-if(!sb){
+        /*
+           حالا هر سه جدول را می‌خوانیم.
+        */
 
-throw new Error(
-"Supabase client ساخته نشده است."
-);
+        const [
 
-}
+            pRes,
 
+            cRes,
 
-/* PROJECTS */
+            tRes
 
-const pRes=
-await sb
-.from("projects")
-.select(
-"id,name,employer,created_at"
-)
-.order("name");
+        ] = await Promise.all([
 
 
-if(pRes.error){
+            sb
+            .from("projects")
+            .select(
+                "id,name,employer,created_at"
+            )
+            .order("name"),
 
-throw new Error(
-"projects: "+
-pRes.error.message
-);
 
-}
+            sb
+            .from("contractors")
+            .select(
+                "id,name,created_at"
+            )
+            .order("name"),
 
 
-/* CONTRACTORS */
+            sb
+            .from("transactions")
+            .select(
+                "id,contractor_id,project_id,type,description,amount_toman,transaction_date,status,created_at"
+            )
+            .order(
+                "created_at",
+                {
+                    ascending:true
+                }
+            )
 
-const cRes=
-await sb
-.from("contractors")
-.select(
-"id,name,created_at"
-)
-.order("name");
+        ]);
 
 
-if(cRes.error){
+        /* PROJECT ERROR */
 
-throw new Error(
-"contractors: "+
-cRes.error.message
-);
+        if(pRes.error){
 
-}
+            throw new Error(
+                "projects: " +
+                pRes.error.message
+            );
 
+        }
 
-/* TRANSACTIONS */
 
-const tRes=
-await sb
-.from("transactions")
-.select(
-"id,contractor_id,project_id,type,description,amount,amount_toman,transaction_date,status,replaces_transaction_id,source_type,source_hash,created_at"
-)
-.order(
-"created_at",
-{
-ascending:true
-}
-);
+        /* CONTRACTOR ERROR */
 
+        if(cRes.error){
 
-if(tRes.error){
+            throw new Error(
+                "contractors: " +
+                cRes.error.message
+            );
 
-throw new Error(
-"transactions: "+
-tRes.error.message
-);
+        }
 
-}
 
+        /* TRANSACTIONS ERROR */
 
-/* RESET */
+        if(tRes.error){
 
-db={
-projects:{},
-contractors:{}
-};
+            throw new Error(
+                "transactions: " +
+                tRes.error.message
+            );
 
+        }
 
-/* PROJECTS */
 
-(pRes.data||[]).forEach(
-function(project){
+        /*
+           ساخت دیتای محلی از دیتابیس
+        */
 
-db.projects[
-project.name
-]={
+        db = {
 
-id:project.id,
+            projects:{},
 
-employer:
-project.employer||null,
+            contractors:{}
 
-tasks:
-INITIAL_TASKS[
-project.name
-]
-?
-JSON.parse(
-JSON.stringify(
-INITIAL_TASKS[
-project.name
-]
-)
-)
-:[],
+        };
 
-completed:[]
 
-};
+        /* PROJECTS */
 
-}
-);
+        (
+            pRes.data || []
 
+        ).forEach(
 
-/* CONTRACTORS */
+            project=>{
 
-(cRes.data||[]).forEach(
-function(contractor){
+                db.projects[
+                    project.name
+                ]={
 
-db.contractors[
-contractor.name
-]={
+                    id:
+                        project.id,
 
-id:contractor.id,
+                    employer:
+                        project.employer ||
+                        null,
 
-work:[],
+                    tasks:
+                        INITIAL_TASKS[
+                            project.name
+                        ] || [],
 
-payments:[]
+                    completed:[]
 
-};
+                };
 
-}
-);
+            }
 
+        );
 
-/* LOOKUP */
 
-const contractorById=
-Object.fromEntries(
+        /* CONTRACTORS */
 
-(cRes.data||[]).map(
-c=>[
-c.id,
-c.name
-]
-)
+        (
+            cRes.data || []
 
-);
+        ).forEach(
 
+            contractor=>{
 
-const projectById=
-Object.fromEntries(
+                db.contractors[
+                    contractor.name
+                ]={
 
-(pRes.data||[]).map(
-p=>[
-p.id,
-p.name
-]
-)
+                    id:
+                        contractor.id,
 
-);
+                    work:[],
 
+                    payments:[]
 
-/* TRANSACTIONS */
+                };
 
-(tRes.data||[]).forEach(
-function(transaction){
+            }
 
-const contractor=
-contractorById[
-transaction.contractor_id
-];
+        );
 
 
-const project=
-projectById[
-transaction.project_id
-];
+        /*
+           ID MAP
+        */
 
+        const contractorsById =
+            Object.fromEntries(
 
-if(
-!contractor||
-!db.contractors[contractor]
-){
+                (
+                    cRes.data || []
+                ).map(
 
-return;
+                    c=>[
+                        c.id,
+                        c.name
+                    ]
 
-}
+                )
 
+            );
 
-const item={
 
-id:transaction.id,
+        const projectsById =
+            Object.fromEntries(
 
-project:
-project||"نامشخص",
+                (
+                    pRes.data || []
+                ).map(
 
-description:
-transaction.description||"",
+                    p=>[
+                        p.id,
+                        p.name
+                    ]
 
-amount:
-Number(
-transaction.amount_toman ??
-transaction.amount ??
-0
-),
+                )
 
-date:
-transaction.transaction_date,
+            );
 
-status:
-transaction.status,
 
-replaces_transaction_id:
-transaction.replaces_transaction_id
+        /* TRANSACTIONS */
 
-};
+        (
+            tRes.data || []
 
+        ).forEach(
 
-if(
-transaction.type==="work"
-){
+            transaction=>{
 
-db.contractors[
-contractor
-].work.push(item);
+                const contractor =
+                    contractorsById[
+                        transaction.contractor_id
+                    ];
 
-}
 
+                const project =
+                    projectsById[
+                        transaction.project_id
+                    ];
 
-else if(
-transaction.type==="payment"
-){
 
-db.contractors[
-contractor
-].payments.push(item);
+                if(
+                    !contractor ||
+                    !db.contractors[
+                        contractor
+                    ]
+                ){
 
-}
+                    return;
 
-}
-);
+                }
 
 
-/* SUCCESS */
+                const item={
 
-notice.style.background="#ecfdf5";
+                    id:
+                        transaction.id,
 
-notice.style.borderColor="#a7f3d0";
+                    project:
+                        project ||
+                        "نامشخص",
 
-notice.style.color="#166534";
+                    description:
+                        transaction.description ||
+                        "",
 
-notice.textContent=
-"✅ اتصال آنلاین به Supabase موفق است.";
+                    amount:
+                        Number(
+                            transaction.amount_toman ||
+                            0
+                        ),
 
+                    date:
+                        transaction.transaction_date,
 
-render();
+                    status:
+                        transaction.status
 
+                };
 
-}catch(error){
 
-console.error(
-"SUPABASE ERROR:",
-error
-);
+                if(
+                    transaction.type ===
+                    "work"
+                ){
 
-showConnectionError(
-error?.message||
-String(error)
-);
+                    db.contractors[
+                        contractor
+                    ].work.push(item);
 
-}
+                }
+
+
+                else if(
+                    transaction.type ===
+                    "payment"
+                ){
+
+                    db.contractors[
+                        contractor
+                    ].payments.push(item);
+
+                }
+
+            }
+
+        );
+
+
+        /*
+           موفق
+        */
+
+        showConnectionSuccess(
+
+            "اتصال آنلاین به Supabase موفق است. " +
+
+            `${pRes.data?.length || 0} پروژه، ` +
+
+            `${cRes.data?.length || 0} پیمانکار و ` +
+
+            `${tRes.data?.length || 0} تراکنش دریافت شد.`
+
+        );
+
+
+        render();
+
+
+    }
+
+    catch(error){
+
+        console.error(
+            "SUPABASE ERROR:",
+            error
+        );
+
+
+        showConnectionError(
+            "خطا در اتصال به Supabase",
+            error
+        );
+
+    }
 
 }
 
@@ -1108,766 +1317,843 @@ String(error)
 
 function render(){
 
-buildNavigation();
+    buildNavigation();
 
 
-const names=
-Object.keys(
-db.contractors
-);
+    const names =
+        Object.keys(
+            db.contractors
+        );
 
 
-const totalW=
-names.reduce(
-(sum,name)=>
-sum+
-totalWork(name),
-0
-);
+    let totalW=0;
+    let totalP=0;
 
 
-const totalP=
-names.reduce(
-(sum,name)=>
-sum+
-totalPayments(name),
-0
-);
+    names.forEach(
 
+        name=>{
 
-/* STATS */
+            totalW +=
+                totalWork(name);
 
-document.getElementById(
-"stats"
-).innerHTML=`
+            totalP +=
+                totalPayments(name);
 
-<div class="card stat">
+        }
 
-<small>
-پروژه‌ها
-</small>
+    );
 
-<strong>
-${Object.keys(db.projects).length}
-</strong>
 
-</div>
+    /* STATS */
 
+    document.getElementById(
+        "stats"
+    ).innerHTML = `
 
-<div class="card stat">
+        <div class="card stat">
 
-<small>
-پیمانکاران
-</small>
+            <small>
+                پروژه‌ها
+            </small>
 
-<strong>
-${names.length}
-</strong>
+            <strong>
+                ${
+                    Object.keys(
+                        db.projects
+                    ).length
+                }
+            </strong>
 
-</div>
+        </div>
 
 
-<div class="card stat">
+        <div class="card stat">
 
-<small>
-کل کار انجام‌شده
-</small>
+            <small>
+                پیمانکاران
+            </small>
 
-<strong>
-${money(totalW)}
-</strong>
+            <strong>
+                ${names.length}
+            </strong>
 
-</div>
+        </div>
 
 
-<div class="card stat">
+        <div class="card stat">
 
-<small>
-کل مانده بدهی
-</small>
+            <small>
+                کل کار انجام‌شده
+            </small>
 
-<strong class="danger">
-${money(totalW-totalP)}
-</strong>
+            <strong>
+                ${money(totalW)}
+            </strong>
 
-</div>
+        </div>
 
-`;
 
+        <div class="card stat">
 
-/* CONTRACTORS */
+            <small>
+                کل مانده بدهی
+            </small>
 
-document.getElementById(
-"contractorCards"
-).innerHTML=
+            <strong class="danger">
+                ${money(totalW-totalP)}
+            </strong>
 
-names.map(
-function(name){
+        </div>
 
-const b=
-balance(name);
+    `;
 
-return `
 
-<div class="card">
+    /* CONTRACTOR CARDS */
 
-<div class="row">
+    document.getElementById(
+        "contractorCards"
+    ).innerHTML =
 
-<strong>
-👤 ${esc(name)}
-</strong>
+        names.map(
 
-<strong class="${
-b>=0
-?"danger"
-:"success"
-}">
+            name=>`
 
-${money(b)}
+            <div class="card">
 
-</strong>
+                <div class="row">
 
-</div>
+                    <strong>
+                        👤 ${esc(name)}
+                    </strong>
 
+                    <strong
+                        class="${
+                            balance(name)>=0
+                            ?
+                            "danger"
+                            :
+                            "success"
+                        }"
+                    >
+                        ${money(balance(name))}
+                    </strong>
 
-<p class="muted">
+                </div>
 
-کار انجام‌شده:
-${money(totalWork(name))}
 
-<br>
+                <p class="muted">
 
-پرداخت:
-${money(totalPayments(name))}
+                    کار انجام‌شده:
+                    ${money(totalWork(name))}
 
-</p>
+                    <br>
 
-</div>
+                    پرداخت:
+                    ${money(totalPayments(name))}
 
-`;
+                </p>
 
-}
-).join("");
+            </div>
 
+            `
 
-/* ARTA */
+        ).join("");
 
-const artaProjects=
 
-Object.keys(
-db.projects
-).filter(
-project=>
-db.projects[
-project
-].employer===
-"آرتا پیشرو"
-);
+    /* ARTA */
 
+    const artaProjects =
+        Object.keys(
+            db.projects
+        ).filter(
 
-let artaWork=0;
+            project=>
+                db.projects[
+                    project
+                ].employer ===
+                "آرتا پیشرو"
 
-let artaPayments=0;
+        );
 
 
-names.forEach(
-function(name){
+    let artaWork=0;
+    let artaPayments=0;
 
-db.contractors[
-name
-].work.forEach(
-function(item){
 
-if(
-item.status!=="replaced" &&
-artaProjects.includes(
-item.project
-)
-){
+    names.forEach(
 
-artaWork+=
-Number(item.amount||0);
+        name=>{
 
-}
+            db.contractors[
+                name
+            ].work.forEach(
 
-});
+                item=>{
 
+                    if(
+                        artaProjects.includes(
+                            item.project
+                        )
+                    ){
 
-db.contractors[
-name
-].payments.forEach(
-function(item){
+                        if(
+                            item.status !==
+                            "replaced"
+                        ){
 
-if(
-item.status!=="replaced"
-){
+                            artaWork +=
+                                Number(
+                                    item.amount ||
+                                    0
+                                );
 
-artaPayments+=
-Number(item.amount||0);
+                        }
 
-}
+                    }
 
-});
+                }
 
-}
-);
+            );
 
 
-document.getElementById(
-"employerCard"
-).innerHTML=`
+            db.contractors[
+                name
+            ].payments.forEach(
 
-<div class="row">
+                payment=>{
 
-<div>
+                    if(
+                        !payment.project ||
+                        artaProjects.includes(
+                            payment.project
+                        )
+                    ){
 
-<strong>
-🏢 آرتا پیشرو
-</strong>
+                        artaPayments +=
+                            Number(
+                                payment.amount ||
+                                0
+                            );
 
-<p class="muted">
+                    }
 
-${artaProjects.join(" • ")}
+                }
 
-</p>
+            );
 
-</div>
+        }
 
+    );
 
-<strong class="danger">
 
-${money(
-artaWork-artaPayments
-)}
+    document.getElementById(
+        "employerCard"
+    ).innerHTML = `
 
-</strong>
+        <div class="row">
 
-</div>
+            <div>
 
+                <strong>
+                    🏢 آرتا پیشرو
+                </strong>
 
-<p>
+                <p class="muted">
 
-کل کار:
-<b>${money(artaWork)}</b>
+                    ${artaProjects.join(" • ")}
 
-<br>
+                </p>
 
-پرداخت:
-<b>${money(artaPayments)}</b>
+            </div>
 
-<br>
 
-مانده:
-<b class="danger">
+            <strong class="danger">
 
-${money(
-artaWork-artaPayments
-)}
+                ${money(
+                    artaWork -
+                    artaPayments
+                )}
 
-</b>
+            </strong>
 
-</p>
+        </div>
 
-`;
 
+        <p>
 
-/* PROJECTS */
+            کل کار:
+            <b>
+                ${money(artaWork)}
+            </b>
 
-document.getElementById(
-"projectsList"
-).innerHTML=
+            <br>
 
-Object.entries(
-db.projects
-).map(
-function([project,data]){
+            پرداخت:
+            <b>
+                ${money(artaPayments)}
+            </b>
 
-return `
+            <br>
 
-<div class="card">
+            مانده:
+            <b class="danger">
+                ${money(
+                    artaWork -
+                    artaPayments
+                )}
+            </b>
 
-<div class="row">
+        </p>
 
-<strong>
-🏗️ ${esc(project)}
-</strong>
+    `;
 
-<span class="pill">
 
-${esc(
-data.employer||
-"مستقل"
-)}
+    /* PROJECTS */
 
-</span>
+    document.getElementById(
+        "projectsList"
+    ).innerHTML =
 
-</div>
+        Object.entries(
+            db.projects
+        ).map(
 
+            ([project,data])=>`
 
-${
-data.tasks.length
+            <div class="card">
 
-?
+                <div class="row">
 
-data.tasks.map(
-function(task){
+                    <strong>
+                        🏗️ ${esc(project)}
+                    </strong>
 
-return `
+                    <span class="pill">
 
-<div class="task">
+                        ${esc(
+                            data.employer ||
+                            "مستقل"
+                        )}
 
-<span
-class="dot ${esc(task[1])}"
-></span>
+                    </span>
 
-<span>
-${esc(task[0])}
-</span>
+                </div>
 
-</div>
 
-`;
+                ${
+                    data.tasks.length
 
-}
-).join("")
+                    ?
 
-:
+                    data.tasks.map(
 
-`<p class="muted">
-کار باقی‌مانده‌ای ندارد.
-</p>`
+                        task=>`
 
-}
+                        <div class="task">
 
-</div>
+                            <span
+                                class="dot ${esc(task[1])}"
+                            ></span>
 
-`;
+                            <span>
+                                ${esc(task[0])}
+                            </span>
 
-}
-).join("");
+                        </div>
 
+                        `
 
-/* CONTRACTORS PAGE */
+                    ).join("")
 
-document.getElementById(
-"contractorsList"
-).innerHTML=
+                    :
 
-names.map(
-function(name){
+                    `<p class="muted">
+                        کار باقی‌مانده‌ای ندارد.
+                    </p>`
 
-const contractor=
-db.contractors[name];
+                }
 
+            </div>
 
-return `
+            `
 
-<div
-class="card"
-style="margin-bottom:10px"
->
+        ).join("");
 
-<div class="row">
 
-<strong>
-👤 ${esc(name)}
-</strong>
+    /* CONTRACTORS */
 
-<strong class="danger">
+    document.getElementById(
+        "contractorsList"
+    ).innerHTML =
 
-${money(
-balance(name)
-)}
+        names.map(
 
-</strong>
+            name=>`
 
-</div>
+            <div
+                class="card"
+                style="margin-bottom:10px"
+            >
 
+                <div class="row">
 
-<details open>
+                    <strong>
+                        👤 ${esc(name)}
+                    </strong>
 
-<summary>
-کارهای انجام‌شده
-</summary>
+                    <strong class="danger">
+                        ${money(
+                            balance(name)
+                        )}
+                    </strong>
 
+                </div>
 
-${
-(contractor.work||[]).map(
-function(item){
 
-return `
+                <details open>
 
-<p>
+                    <summary>
+                        کارهای انجام‌شده
+                    </summary>
 
-${esc(item.project)}
-—
-${esc(item.description)}
 
-<br>
+                    ${
+                        db.contractors[
+                            name
+                        ].work.map(
 
-<b>
-${money(item.amount)}
-</b>
+                            item=>`
 
-${
-item.date
-?
+                            <p>
 
-`<span class="muted">
-— ${dateFa(item.date)}
-</span>`
+                                ${esc(
+                                    item.project
+                                )}
 
-:
+                                —
 
-""
+                                ${esc(
+                                    item.description
+                                )}
 
-}
+                                <br>
 
-</p>
+                                <b>
+                                    ${money(
+                                        item.amount
+                                    )}
+                                </b>
 
-`;
+                                ${
+                                    item.date
 
-}
-).join("")
+                                    ?
 
-||
+                                    `<span class="muted">
+                                        — ${
+                                            dateFa(
+                                                item.date
+                                            )
+                                        }
+                                    </span>`
 
-"<p class='muted'>موردی نیست.</p>"
+                                    :
 
-}
+                                    ""
+                                }
 
-</details>
+                            </p>
 
+                            `
 
-<details>
+                        ).join("")
 
-<summary>
-پرداخت‌ها
-</summary>
+                        ||
 
+                        "<p class='muted'>موردی نیست.</p>"
 
-${
-(contractor.payments||[]).map(
-function(item){
+                    }
 
-return `
+                </details>
 
-<p>
 
-${esc(item.description)}
+                <details>
 
-<br>
+                    <summary>
+                        پرداخت‌ها
+                    </summary>
 
-<b class="success">
 
-${money(item.amount)}
+                    ${
+                        db.contractors[
+                            name
+                        ].payments.map(
 
-</b>
+                            payment=>`
 
-${
-item.date
+                            <p>
 
-?
+                                ${esc(
+                                    payment.description
+                                )}
 
-`<span class="muted">
-— ${dateFa(item.date)}
-</span>`
+                                <br>
 
-:
+                                <b class="success">
 
-""
+                                    ${money(
+                                        payment.amount
+                                    )}
 
-}
+                                </b>
 
-</p>
+                                ${
+                                    payment.date
 
-`;
+                                    ?
 
-}
-).join("")
+                                    `<span class="muted">
+                                        — ${
+                                            dateFa(
+                                                payment.date
+                                            )
+                                        }
+                                    </span>`
 
-||
+                                    :
 
-"<p class='muted'>پرداختی ثبت نشده.</p>"
+                                    ""
 
-}
+                                }
 
-</details>
+                            </p>
 
+                            `
 
-</div>
+                        ).join("")
 
-`;
+                        ||
 
-}
-).join("");
+                        "<p class='muted'>پرداختی ثبت نشده.</p>"
 
+                    }
 
-/* ACCOUNTING */
+                </details>
 
-document.getElementById(
-"accounts"
-).innerHTML=
+            </div>
 
-names.map(
-function(name){
+            `
 
-return `
+        ).join("");
 
-<tr>
 
-<td>
-${esc(name)}
-</td>
+    /* ACCOUNTING */
 
-<td>
-${money(
-totalWork(name)
-)}
-</td>
+    document.getElementById(
+        "accounts"
+    ).innerHTML =
 
-<td class="success">
+        names.map(
 
-${money(
-totalPayments(name)
-)}
+            name=>`
 
-</td>
+            <tr>
 
-<td class="danger">
+                <td>
+                    ${esc(name)}
+                </td>
 
-<b>
-${money(
-balance(name)
-)}
-</b>
+                <td>
+                    ${money(
+                        totalWork(name)
+                    )}
+                </td>
 
-</td>
+                <td class="success">
 
-</tr>
+                    ${money(
+                        totalPayments(name)
+                    )}
 
-`;
+                </td>
 
-}
-).join("");
+                <td class="danger">
 
+                    <b>
+                        ${money(
+                            balance(name)
+                        )}
+                    </b>
 
-/* TASKS */
+                </td>
 
-document.getElementById(
-"tasksList"
-).innerHTML=
+            </tr>
 
-Object.entries(
-db.projects
-).map(
-function([project,data]){
+            `
 
-return `
+        ).join("");
 
-<div class="card">
 
-<strong>
-🏗️ ${esc(project)}
-</strong>
+    /* TASKS */
 
+    document.getElementById(
+        "tasksList"
+    ).innerHTML =
 
-${
-data.tasks.length
+        Object.entries(
+            db.projects
+        ).map(
 
-?
+            ([project,data])=>`
 
-data.tasks.map(
-function(task){
+            <div class="card">
 
-return `
+                <strong>
+                    🏗️ ${esc(project)}
+                </strong>
 
-<div class="task">
 
-<span
-class="dot ${esc(task[1])}"
-></span>
+                ${
+                    data.tasks.length
 
-${esc(task[0])}
+                    ?
 
-</div>
+                    data.tasks.map(
 
-`;
+                        task=>`
 
-}
-).join("")
+                        <div class="task">
 
-:
+                            <span
+                                class="dot ${esc(task[1])}"
+                            ></span>
 
-`<p class="muted">
-کار باقی‌مانده‌ای نیست.
-</p>`
+                            ${esc(task[0])}
 
-}
+                        </div>
 
-</div>
+                        `
 
-`;
+                    ).join("")
 
-}
-).join("");
+                    :
 
+                    `<p class="muted">
+                        کار باقی‌مانده‌ای نیست.
+                    </p>`
 
-/* EMPLOYERS */
+                }
 
-document.getElementById(
-"employersList"
-).innerHTML=`
+            </div>
 
-<div class="card">
+            `
 
-<strong>
-🏢 آرتا پیشرو
-</strong>
+        ).join("");
 
-<p class="muted">
 
-${artaProjects.join(" • ")}
+    /* EMPLOYERS */
 
-</p>
+    document.getElementById(
+        "employersList"
+    ).innerHTML = `
 
-<p>
+        <div class="card">
 
-کار:
-${money(artaWork)}
+            <strong>
+                🏢 آرتا پیشرو
+            </strong>
 
-<br>
+            <p class="muted">
 
-پرداخت:
-${money(artaPayments)}
+                ${artaProjects.join(" • ")}
 
-<br>
+            </p>
 
-<b class="danger">
+            <p>
 
-مانده:
-${money(
-artaWork-artaPayments
-)}
+                کار:
+                ${money(artaWork)}
 
-</b>
+                <br>
 
-</p>
+                پرداخت:
+                ${money(artaPayments)}
 
-</div>
+                <br>
 
+                <b class="danger">
 
-<div class="card">
+                    مانده:
+                    ${money(
+                        artaWork -
+                        artaPayments
+                    )}
 
-<strong>
-🏢 پروژه‌های مستقل
-</strong>
+                </b>
 
-<p>
-خاوران • باغ فردوس
-</p>
+            </p>
 
-</div>
+        </div>
 
-`;
+
+        <div class="card">
+
+            <strong>
+                🏢 پروژه‌های مستقل
+            </strong>
+
+            <p>
+                خاوران • باغ فردوس
+            </p>
+
+        </div>
+
+    `;
 
 }
 
 
 /* =====================================================
-   MODAL
+   ONLINE ENTRY HELP
 ===================================================== */
 
-function openModal(){
+function showOnlineEntryHelp(){
 
-document.getElementById(
-"modalBox"
-).innerHTML=`
+    openModal("help");
 
-<h3>
-وضعیت اتصال
-</h3>
-
-<p>
-✅ داشبورد برای خواندن اطلاعات
-به Supabase متصل است.
-</p>
-
-<p class="muted">
-
-داده‌ها از جدول‌های:
-
-projects
-
-<br>
-
-contractors
-
-<br>
-
-transactions
-
-</p>
+}
 
 
-<button
-class="btn light"
-onclick="loadData();closeModal()"
->
+function openModal(type){
 
-↻ تازه‌سازی
-
-</button>
+    let title="";
+    let content="";
 
 
-<div class="actions">
+    if(type==="help"){
 
-<button
-class="btn light"
-onclick="closeModal()"
->
+        title="ثبت آنلاین";
 
-بستن
+        content=`
 
-</button>
+            <div class="notice">
 
-</div>
+                برای اینکه سایت عمومی نتواند
+                مستقیماً حسابداری را تغییر دهد،
+                ثبت کار و پرداخت از داخل ChatGPT
+                انجام می‌شود.
 
-`;
+            </div>
 
 
-document.getElementById(
-"modal"
-).classList.add("show");
+            <p>
+                مثلاً همینجا بنویس:
+            </p>
+
+
+            <p>
+
+                <b>
+
+                برای پروژه همایش،
+                پیمانکار آقای نظری،
+                تاریخ ۱۱ مرداد،
+                مبلغ ۴۸۵۷۰۰۰۰ تومان
+                بابت وال‌پست و اصلاح آهن‌ها
+                ثبت کن.
+
+                </b>
+
+            </p>
+
+        `;
+
+    }
+
+
+    else{
+
+        title="وضعیت اتصال";
+
+        content=`
+
+            <p>
+                وضعیت اتصال را از همین صفحه
+                می‌توانی بررسی کنی.
+            </p>
+
+            <button
+                class="btn"
+                onclick="
+                    closeModal();
+                    loadData();
+                "
+            >
+                🔄 تازه‌سازی اطلاعات
+            </button>
+
+        `;
+
+    }
+
+
+    document.getElementById(
+        "modalBox"
+    ).innerHTML=
+
+        `<h3>${title}</h3>
+        ${content}
+
+        <div class="actions">
+
+            <button
+                class="btn light"
+                onclick="closeModal()"
+            >
+                بستن
+            </button>
+
+        </div>`;
+
+
+    document.getElementById(
+        "modal"
+    ).classList.add(
+        "show"
+    );
 
 }
 
 
 function closeModal(){
 
-document.getElementById(
-"modal"
-).classList.remove("show");
+    document
+        .getElementById("modal")
+        .classList.remove(
+            "show"
+        );
 
 }
 
 
-document.getElementById(
-"modal"
-).addEventListener(
-"click",
-function(event){
+document
+    .getElementById("modal")
+    .addEventListener(
+        "click",
+        event=>{
 
-if(
-event.target.id==="modal"
-){
+            if(
+                event.target.id ===
+                "modal"
+            ){
 
-closeModal();
+                closeModal();
 
-}
+            }
 
-}
-);
+        }
+    );
 
 
 /* =====================================================
