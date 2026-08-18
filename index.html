@@ -428,6 +428,28 @@ footer{
 
 </section>
 
+    <div class="section">
+  <div class="card">
+    <div class="row">
+      <div>
+        <h2 style="margin:0">👤 حساب‌های شخصی</h2>
+        <p class="muted">
+          بدهی‌ها و طلب‌های شخصی، جدا از حساب پروژه‌ها
+        </p>
+      </div>
+
+      <button class="btn light" onclick="loadPersonalAccounts()">
+        🔄 تازه‌سازی
+      </button>
+    </div>
+
+    <div id="personalAccountsList" style="margin-top:12px">
+      <div class="empty">
+        ⏳ در حال دریافت حساب‌های شخصی...
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- TASKS -->
 
@@ -2405,6 +2427,128 @@ async function loadWorkerActivities() {
     `;
   }
 }
+
+
+
+async function loadPersonalAccounts() {
+  const box = document.getElementById("personalAccountsList");
+
+  if (!box) return;
+
+  box.innerHTML = `
+    <div class="empty">
+      ⏳ در حال دریافت حساب‌های شخصی...
+    </div>
+  `;
+
+  try {
+    const { data, error } = await sb
+      .from("personal_accounts")
+      .select(`
+        id,
+        person_name,
+        account_type,
+        amount_toman,
+        paid_toman,
+        account_date,
+        description,
+        status
+      `)
+      .order("account_date", { ascending: false })
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      box.innerHTML = `
+        <div class="empty">
+          👤 هنوز حساب شخصی ثبت نشده.
+        </div>
+      `;
+      return;
+    }
+
+    box.innerHTML = data.map(item => {
+
+      const amount = Number(item.amount_toman || 0);
+      const paid = Number(item.paid_toman || 0);
+      const remaining = Math.max(amount - paid, 0);
+
+      const isDebt = item.account_type === "debt";
+
+      return `
+        <details>
+          <summary>
+            👤 ${esc(item.person_name)}
+
+            <span class="pill">
+              ${isDebt ? "💸 بدهکارم" : "💰 طلبکارم"}
+            </span>
+
+            <span class="${isDebt ? "danger" : "success"}">
+              ${money(remaining)}
+            </span>
+          </summary>
+
+          <div style="margin-top:12px">
+
+            <p>
+              <b>نوع حساب:</b>
+              ${isDebt ? "بدهکارم" : "طلبکارم"}
+            </p>
+
+            <p>
+              <b>مبلغ:</b>
+              ${money(amount)}
+            </p>
+
+            <p>
+              <b>پرداخت‌شده:</b>
+              ${money(paid)}
+            </p>
+
+            <p>
+              <b>مانده:</b>
+              <span class="${isDebt ? "danger" : "success"}">
+                <b>${money(remaining)}</b>
+              </span>
+            </p>
+
+            <p>
+              <b>📅 تاریخ:</b>
+              ${dateFa(item.account_date) || "-"}
+            </p>
+
+            ${
+              item.description
+                ? `
+                  <p>
+                    <b>📝 توضیحات:</b>
+                    ${esc(item.description)}
+                  </p>
+                `
+                : ""
+            }
+
+          </div>
+        </details>
+      `;
+    }).join("");
+
+  } catch (e) {
+
+    console.error("PERSONAL ACCOUNTS ERROR:", e);
+
+    box.innerHTML = `
+      <div class="notice error-box">
+        ❌ خطا در دریافت حساب‌های شخصی
+        <br>
+        <small>${esc(e?.message || String(e))}</small>
+      </div>
+    `;
+  }
+}
+    
 /* =====================================================
    START
 ===================================================== */
@@ -2426,7 +2570,10 @@ setTimeout(() => {
   loadPurchases();
 
 }, 1000);
-    
+
+    setTimeout(() => {
+  loadPersonalAccounts();
+}, 1000);
 </script>
 
 </body>
