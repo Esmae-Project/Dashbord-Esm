@@ -590,8 +590,13 @@ if (typeof supabase === "undefined") {
     function closeModal() { document.getElementById("modal").classList.remove("show") }
     document.getElementById("modal").addEventListener("click", e => { if (e.target.id === "modal") closeModal() });
 
-    buildNavigation();
-    loadData();
+    document.getElementById("connectionNotice").textContent = "🟡 JavaScript اجرا شد؛ در حال شروع اتصال...";
+
+buildNavigation();
+
+document.getElementById("connectionNotice").textContent = "🟡 loadData در حال اجراست...";
+
+loadData();
   </script>
 </body>
 </html>
