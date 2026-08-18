@@ -407,6 +407,8 @@ footer{
 
     </div>
 
+    <!-- حساب پیمانکاران -->
+
     <div class="table-wrap">
 
         <table>
@@ -426,31 +428,53 @@ footer{
 
     </div>
 
-</section>
+
+    <!-- حساب‌های شخصی -->
 
     <div class="section">
-  <div class="card">
-    <div class="row">
-      <div>
-        <h2 style="margin:0">👤 حساب‌های شخصی</h2>
-        <p class="muted">
-          بدهی‌ها و طلب‌های شخصی، جدا از حساب پروژه‌ها
-        </p>
-      </div>
 
-      <button class="btn light" onclick="loadPersonalAccounts()">
-        🔄 تازه‌سازی
-      </button>
+        <div class="card">
+
+            <div class="row">
+
+                <div>
+                    <h2 style="margin:0">
+                        👤 حساب‌های شخصی
+                    </h2>
+
+                    <p class="muted">
+                        بدهی‌ها و طلب‌های شخصی، جدا از حساب پروژه‌ها
+                    </p>
+                </div>
+
+                <button
+                    class="btn light"
+                    onclick="loadPersonalAccounts()"
+                >
+                    🔄 تازه‌سازی
+                </button>
+
+            </div>
+
+
+            <div
+                id="personalAccountsList"
+                style="margin-top:12px"
+            >
+
+                <div class="empty">
+                    ⏳ در حال دریافت حساب‌های شخصی...
+                </div>
+
+            </div>
+
+        </div>
+
     </div>
 
-    <div id="personalAccountsList" style="margin-top:12px">
-      <div class="empty">
-        ⏳ در حال دریافت حساب‌های شخصی...
-      </div>
-    </div>
-  </div>
-</div>
+</section>
 
+    
 <!-- TASKS -->
 
 <section id="tasks" class="view">
