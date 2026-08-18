@@ -491,13 +491,20 @@ footer{
 <!-- PURCHASES -->
 
 <section id="purchases" class="view">
+  <div class="toolbar">
+    <button class="btn" onclick="loadPurchases()">🔄 تازه‌سازی</button>
+  </div>
 
-    <div class="empty">
-        🛒 بخش خرید
-        <br><br>
-        ساختار این بخش آماده توسعه است.
+  <div class="card">
+    <h2>🛒 خریدها</h2>
+    <p class="muted">خریدهای ثبت‌شده برای پروژه‌ها</p>
+
+    <div id="purchasesList">
+      <div class="empty">
+        ⏳ در حال دریافت خریدها...
+      </div>
     </div>
-
+  </div>
 </section>
 
 
@@ -2265,6 +2272,139 @@ async function loadWorkerActivities() {
   }
 }
 
+    async function loadPurchases() {
+  const box = document.getElementById("purchasesList");
+
+  if (!box) return;
+
+  box.innerHTML = `
+    <div class="empty">
+      ⏳ در حال دریافت خریدها...
+    </div>
+  `;
+
+  try {
+    const { data, error } = await sb
+      .from("purchases")
+      .select(`
+        id,
+        item_name,
+        quantity,
+        unit,
+        amount_toman,
+        purchase_date,
+        project_id,
+        description
+      `)
+      .order("purchase_date", { ascending: false });
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      box.innerHTML = `
+        <div class="empty">
+          🛒 هنوز خریدی ثبت نشده.
+        </div>
+      `;
+      return;
+    }
+
+    const projects = Object.entries(db.projects || {}).reduce(
+      (acc, [name, project]) => {
+        acc[project.id] = name;
+        return acc;
+      },
+      {}
+    );
+
+    box.innerHTML = data.map(p => {
+      const projectName =
+        projects[p.project_id] || "نامشخص";
+
+      const amount = Number(p.amount_toman || 0)
+        .toLocaleString("fa-IR");
+
+      const quantity =
+        p.quantity ?? "-";
+
+      const unit =
+        p.unit || "عدد";
+
+      return `
+        <div class="card" style="margin-bottom:12px">
+
+          <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:10px;
+            flex-wrap:wrap;
+          ">
+
+            <div>
+              <h3 style="margin:0 0 8px">
+                🛒 ${esc(p.item_name || "خرید")}
+              </h3>
+
+              <div class="muted">
+                🏗️ پروژه:
+                <b>${esc(projectName)}</b>
+              </div>
+
+              <div class="muted">
+                🔢 مقدار:
+                <b>${esc(String(quantity))}</b>
+                ${esc(unit)}
+              </div>
+
+              <div class="muted">
+                📅 تاریخ:
+                ${dateFa(p.purchase_date) || "-"}
+              </div>
+
+              ${
+                p.description
+                  ? `
+                    <div class="muted">
+                      📝 ${esc(p.description)}
+                    </div>
+                  `
+                  : ""
+              }
+            </div>
+
+            <div style="
+              font-size:18px;
+              font-weight:700;
+            ">
+              💰 ${amount} تومان
+            </div>
+
+          </div>
+
+        </div>
+      `;
+    }).join("");
+
+  } catch (e) {
+    console.error("PURCHASES ERROR:", e);
+
+    box.innerHTML = `
+      <div class="notice"
+        style="
+          background:#fef2f2;
+          border-color:#fecaca;
+          color:#991b1b;
+        ">
+        ❌ خطا در دریافت خریدها
+        <br>
+        <small>
+          ${esc(e?.message || String(e))}
+        </small>
+      </div>
+    `;
+  }
+}
 /* =====================================================
    START
 ===================================================== */
@@ -2280,6 +2420,12 @@ setTimeout(() => {
   loadWorkerActivities();
 
 }, 500);
+
+    setTimeout(() => {
+
+  loadPurchases();
+
+}, 1000);
     
 </script>
 
