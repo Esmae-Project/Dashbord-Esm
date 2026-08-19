@@ -313,6 +313,98 @@ footer{
         font-size:20px;
     }
 }
+/* ==========================================
+   ACCOUNTING ACCORDION
+========================================== */
+
+.accounting-accordion{
+    margin-top:12px;
+    padding:0;
+    overflow:hidden;
+    background:white;
+    border:1px solid #e5e7eb;
+    border-radius:18px;
+    box-shadow:0 5px 18px #0000000a;
+}
+
+
+/* عنوان آکاردئون */
+
+.accounting-accordion summary{
+    list-style:none;
+    padding:17px;
+    cursor:pointer;
+    font-size:16px;
+    font-weight:800;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    user-select:none;
+}
+
+
+/* حذف فلش پیش‌فرض */
+
+.accounting-accordion summary::-webkit-details-marker{
+    display:none;
+}
+
+
+/* علامت + */
+
+.accounting-accordion summary::after{
+    content:"＋";
+    font-size:21px;
+    color:#6b7280;
+    font-weight:400;
+}
+
+
+/* وقتی باز است */
+
+.accounting-accordion[open] summary::after{
+    content:"−";
+}
+
+
+/* خط جداکننده هنگام باز بودن */
+
+.accounting-accordion[open] summary{
+    border-bottom:1px solid #eee;
+}
+
+
+/* محتوای داخل */
+
+.accordion-content{
+    padding:15px;
+}
+
+
+/* فاصله بین آکاردئون‌ها */
+
+.accounting-accordion + .accounting-accordion{
+    margin-top:10px;
+}
+
+
+/* موبایل */
+
+@media(max-width:700px){
+
+    .accounting-accordion summary{
+        padding:15px;
+        font-size:15px;
+    }
+
+    .accordion-content{
+        padding:12px;
+    }
+
+}
+    
 </style>
 </head>
 
@@ -393,98 +485,320 @@ footer{
 
 <!-- ACCOUNTING -->
 
+<!-- ACCOUNTING -->
+
 <section id="accounting" class="view">
 
-    <div class="toolbar">
+  <div class="toolbar">
 
-        <button class="btn" onclick="showOnlineEntryHelp()">
-            ＋ کار انجام‌شده
-        </button>
+    <button
+      class="btn"
+      onclick="showOnlineEntryHelp()"
+    >
+      ＋ کار انجام‌شده
+    </button>
 
-        <button class="btn green" onclick="showOnlineEntryHelp()">
-            ＋ پرداخت
-        </button>
+    <button
+      class="btn green"
+      onclick="showOnlineEntryHelp()"
+    >
+      ＋ پرداخت
+    </button>
 
-    </div>
+  </div>
 
-    <!-- حساب پیمانکاران -->
 
-    <div class="table-wrap">
+  <!-- ==========================================
+       ۱. حساب پیمانکاران
+  =========================================== -->
+
+  <details class="accounting-accordion">
+
+    <summary>
+      👷 حساب پیمانکاران
+    </summary>
+
+
+    <div class="accordion-content">
+
+      <div class="table-wrap">
 
         <table>
 
-            <thead>
-                <tr>
-                    <th>پیمانکار</th>
-                    <th>کار انجام‌شده</th>
-                    <th>پرداخت</th>
-                    <th>مانده</th>
-                </tr>
-            </thead>
+          <thead>
 
-            <tbody id="accounts"></tbody>
+            <tr>
+
+              <th>
+                پیمانکار
+              </th>
+
+              <th>
+                کار انجام‌شده
+              </th>
+
+              <th>
+                پرداخت
+              </th>
+
+              <th>
+                مانده
+              </th>
+
+            </tr>
+
+          </thead>
+
+
+          <tbody id="accounts">
+
+            <tr>
+
+              <td
+                colspan="4"
+                style="text-align:center"
+              >
+                ⏳ در حال دریافت حساب پیمانکاران...
+              </td>
+
+            </tr>
+
+          </tbody>
 
         </table>
 
-    </div>
-
-
-    <!-- حساب‌های شخصی -->
-<div class="section">
-  <div class="card">
-    <div class="row">
-      <div>
-        <h2 style="margin:0">
-          👤 حساب‌های شخصی
-        </h2>
-        <p class="muted">
-          بدهی‌ها و طلب‌های شخصی، جدا از حساب پروژه‌ها
-        </p>
       </div>
-      <button
-        class="btn light"
-        onclick="loadPersonalAccounts()"
-      >
-        🔄 تازه‌سازی
-      </button>
+
     </div>
-    <!-- خلاصه حساب‌ها -->
-    <div
-      id="personalAccountsSummary"
-      style="
-        display:grid;
-        grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-        gap:10px;
-        margin:15px 0;
-      "
-    ></div>
-    <!-- جدول -->
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>شخص</th>
-            <th>نوع حساب</th>
-            <th>مبلغ</th>
-            <th>پرداخت‌شده</th>
-            <th>مانده</th>
-            <th>تاریخ</th>
-          </tr>
-        </thead>
-        <tbody id="personalAccountsTable">
-          <tr>
-            <td
-              colspan="6"
-              style="text-align:center"
-            >
-              ⏳ در حال دریافت حساب‌های شخصی...
-            </td>
-          </tr>
-        </tbody>
-      </table>
+
+  </details>
+
+
+
+  <!-- ==========================================
+       ۲. حساب‌های شخصی
+  =========================================== -->
+
+  <details class="accounting-accordion">
+
+    <summary>
+      👤 حساب‌های شخصی
+    </summary>
+
+
+    <div class="accordion-content">
+
+      <div class="row">
+
+        <div>
+
+          <h2 style="margin:0">
+            👤 حساب‌های شخصی
+          </h2>
+
+          <p class="muted">
+            بدهی‌ها و طلب‌های شخصی، جدا از حساب پروژه‌ها
+          </p>
+
+        </div>
+
+
+        <button
+          class="btn light"
+          onclick="loadPersonalAccounts()"
+        >
+          🔄 تازه‌سازی
+        </button>
+
+      </div>
+
+
+      <!-- خلاصه حساب‌های شخصی -->
+
+      <div
+        id="personalAccountsSummary"
+        style="
+          display:grid;
+          grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+          gap:10px;
+          margin:15px 0;
+        "
+      ></div>
+
+
+      <!-- جدول حساب‌های شخصی -->
+
+      <div class="table-wrap">
+
+        <table>
+
+          <thead>
+
+            <tr>
+
+              <th>
+                شخص
+              </th>
+
+              <th>
+                نوع حساب
+              </th>
+
+              <th>
+                مبلغ
+              </th>
+
+              <th>
+                پرداخت‌شده
+              </th>
+
+              <th>
+                مانده
+              </th>
+
+              <th>
+                تاریخ
+              </th>
+
+            </tr>
+
+          </thead>
+
+
+          <tbody id="personalAccountsTable">
+
+            <tr>
+
+              <td
+                colspan="6"
+                style="text-align:center"
+              >
+                ⏳ در حال دریافت حساب‌های شخصی...
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
     </div>
-  </div>
-</div>
+
+  </details>
+
+
+
+  <!-- ==========================================
+       ۳. هزینه‌های شخصی
+  =========================================== -->
+
+  <details class="accounting-accordion">
+
+    <summary>
+      🛍️ هزینه‌های شخصی
+    </summary>
+
+
+    <div class="accordion-content">
+
+      <div class="row">
+
+        <div>
+
+          <h2 style="margin:0">
+            🛍️ هزینه‌های شخصی
+          </h2>
+
+          <p class="muted">
+            خریدها و هزینه‌های روزمره شخصی
+          </p>
+
+        </div>
+
+
+        <button
+          class="btn light"
+          onclick="loadPersonalExpenses()"
+        >
+          🔄 تازه‌سازی
+        </button>
+
+      </div>
+
+
+      <!-- خلاصه هزینه‌های شخصی -->
+
+      <div
+        id="personalExpensesSummary"
+        style="
+          display:grid;
+          grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+          gap:10px;
+          margin:15px 0;
+        "
+      ></div>
+
+
+      <!-- جدول هزینه‌های شخصی -->
+
+      <div class="table-wrap">
+
+        <table>
+
+          <thead>
+
+            <tr>
+
+              <th>
+                مورد
+              </th>
+
+              <th>
+                دسته‌بندی
+              </th>
+
+              <th>
+                مبلغ
+              </th>
+
+              <th>
+                تاریخ
+              </th>
+
+              <th>
+                توضیحات
+              </th>
+
+            </tr>
+
+          </thead>
+
+
+          <tbody id="personalExpensesTable">
+
+            <tr>
+
+              <td
+                colspan="5"
+                style="text-align:center"
+              >
+                ⏳ در حال دریافت هزینه‌های شخصی...
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </details>
+
 
 </section>
 
