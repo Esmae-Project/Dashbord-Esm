@@ -3131,6 +3131,191 @@ async function loadPersonalAccounts() {
   }
 
 }
+
+async function loadPersonalExpenses() {
+  const table =
+    document.getElementById("personalExpensesTable");
+  const summary =
+    document.getElementById("personalExpensesSummary");
+  if (!table) {
+    console.error("personalExpensesTable پیدا نشد");
+    return;
+  }
+  table.innerHTML = `
+    <tr>
+      <td colspan="5" style="text-align:center">
+        ⏳ در حال دریافت هزینه‌های شخصی...
+      </td>
+    </tr>
+  `;
+  try {
+    if (!sb) {
+      throw new Error("اتصال به Supabase برقرار نیست.");
+    }
+    const { data, error } = await sb
+      .from("personal_expenses")
+      .select(`
+        id,
+        title,
+        category,
+        amount_toman,
+        expense_date,
+        description,
+        created_at
+      `)
+      .order("expense_date", {
+        ascending: false
+      })
+      .order("created_at", {
+        ascending: false
+      });
+    if (error) {
+      throw error;
+    }
+    console.log(
+      "Personal expenses:",
+      data
+    );
+    if (!data || data.length === 0) {
+      table.innerHTML = `
+        <tr>
+          <td
+            colspan="5"
+            style="text-align:center"
+          >
+            🛍️ هنوز هزینه شخصی ثبت نشده.
+          </td>
+        </tr>
+      `;
+      if (summary) {
+        summary.innerHTML = "";
+      }
+      return;
+    }
+    const formatMoney = value => {
+      return (
+        Number(value || 0)
+          .toLocaleString("fa-IR")
+        + " تومان"
+      );
+    };
+    const formatDate = value => {
+      if (!value) {
+        return "-";
+      }
+      try {
+        return new Date(
+          value + "T00:00:00"
+        ).toLocaleDateString("fa-IR");
+      } catch {
+        return String(value);
+      }
+    };
+    const total = data.reduce(
+      (sum, item) =>
+        sum + Number(item.amount_toman || 0),
+      0
+    );
+    if (summary) {
+      summary.innerHTML = `
+        <div class="card">
+          <div class="muted">
+            💰 مجموع هزینه‌های شخصی
+          </div>
+          <div
+            style="
+              font-size:20px;
+              font-weight:800;
+              margin-top:6px;
+            "
+          >
+            ${formatMoney(total)}
+          </div>
+        </div>
+        <div class="card">
+          <div class="muted">
+            🧾 تعداد هزینه‌ها
+          </div>
+          <div
+            style="
+              font-size:20px;
+              font-weight:800;
+              margin-top:6px;
+            "
+          >
+            ${data.length.toLocaleString("fa-IR")}
+          </div>
+        </div>
+      `;
+    }
+    table.innerHTML = data.map(item => {
+      const title =
+        item.title ||
+        "بدون عنوان";
+      const category =
+        item.category ||
+        "-";
+      const amount =
+        Number(item.amount_toman || 0);
+      return `
+        <tr>
+          <td>
+            <b>
+              ${esc(title)}
+            </b>
+          </td>
+          <td>
+            <span class="pill">
+              ${esc(category)}
+            </span>
+          </td>
+          <td>
+            <b>
+              ${formatMoney(amount)}
+            </b>
+          </td>
+          <td>
+            ${formatDate(item.expense_date)}
+          </td>
+          <td>
+            ${
+              item.description
+                ? esc(item.description)
+                : "-"
+            }
+          </td>
+        </tr>
+      `;
+    }).join("");
+  } catch (error) {
+    console.error(
+      "PERSONAL EXPENSES ERROR:",
+      error
+    );
+    table.innerHTML = `
+      <tr>
+        <td
+          colspan="5"
+          style="
+            text-align:center;
+            color:#b91c1c;
+            padding:20px;
+          "
+        >
+          ❌ خطا در دریافت هزینه‌های شخصی
+          <br><br>
+          <small>
+            ${esc(
+              error?.message ||
+              String(error)
+            )}
+          </small>
+        </td>
+      </tr>
+    `;
+  }
+}
+    
 /* =====================================================
    START
 ===================================================== */
