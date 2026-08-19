@@ -15,13 +15,13 @@ body{
     color:#111827;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif;
 }
-
+ 
 .app{
     max-width:1100px;
     margin:auto;
     padding:14px;
 }
-
+    
 header{
     background:linear-gradient(135deg,#111827,#263449);
     color:white;
@@ -2557,13 +2557,19 @@ document
         }
     );
 async function loadWorkerActivities() {
+
   const box = document.getElementById("workerActivitiesList");
 
   if (!box) return;
 
-  box.innerHTML = `<div class="empty">⏳ در حال دریافت فعالیت‌ها...</div>`;
+  box.innerHTML = `
+    <div class="empty">
+      ⏳ در حال دریافت فعالیت‌ها...
+    </div>
+  `;
 
   try {
+
     const { data, error } = await sb
       .from("worker_activities")
       .select(`
@@ -2572,78 +2578,377 @@ async function loadWorkerActivities() {
         activity_date,
         hours,
         description,
-        project_id
+        project_id,
+        created_at
       `)
       .order("activity_date", { ascending: false })
       .order("created_at", { ascending: false });
 
     if (error) throw error;
 
-    const projects = Object.entries(db.projects).reduce((acc, [name, project]) => {
-      acc[project.id] = name;
-      return acc;
-    }, {});
 
-    if (!data || !data.length) {
+    /* ==========================================
+       ساخت لیست پروژه‌ها
+    ========================================== */
+
+    const projects = {};
+
+    Object.entries(db.projects || {}).forEach(
+      ([name, project]) => {
+
+        if (project && project.id) {
+          projects[project.id] = name;
+        }
+
+      }
+    );
+
+
+    /* ==========================================
+       بدون فعالیت
+    ========================================== */
+
+    if (!data || data.length === 0) {
+
       box.innerHTML = `
         <div class="empty">
           👷 هنوز فعالیتی ثبت نشده.
         </div>
       `;
+
       return;
     }
 
-    box.innerHTML = data.map(x => `
-      <details>
-        <summary>
-          👤 ${esc(x.person_name)}
-          <span class="pill">
-            ${x.hours ? esc(x.hours) + " ساعت" : "فعالیت"}
-          </span>
-        </summary>
 
-        <div style="margin-top:10px">
-          <p>
-            <b>🏗️ پروژه:</b>
-            ${esc(projects[x.project_id] || "نامشخص")}
-          </p>
+    /* ==========================================
+       گروه‌بندی بر اساس تاریخ
+    ========================================== */
 
-          <p>
-            <b>📅 تاریخ:</b>
-            ${dateFa(x.activity_date) || "-"}
-          </p>
+    const groupedByDate = {};
 
-          ${x.hours ? `
-            <p>
-              <b>⏱️ مدت:</b>
-              ${esc(x.hours)} ساعت
-            </p>
-          ` : ""}
+    data.forEach(item => {
 
-          <p>
-            <b>📝 شرح:</b>
-            ${esc(x.description)}
-          </p>
-        </div>
-      </details>
-    `).join("");
+      if (!item.activity_date) return;
 
-  } catch (e) {
-    console.error("WORKER ACTIVITIES ERROR:", e);
+      const date =
+        String(item.activity_date).slice(0, 10);
+
+      if (!groupedByDate[date]) {
+        groupedByDate[date] = [];
+      }
+
+      groupedByDate[date].push(item);
+
+    });
+
+
+    /* ==========================================
+       تبدیل تاریخ میلادی دیتابیس به شمسی
+    ========================================== */
+
+    function formatWorkerDate(dateString) {
+
+      if (!dateString) return "-";
+
+      const parts =
+        String(dateString).split("-");
+
+      if (parts.length !== 3) {
+        return String(dateString);
+      }
+
+      const year =
+        Number(parts[0]);
+
+      const month =
+        Number(parts[1]);
+
+      const day =
+        Number(parts[2]);
+
+      if (
+        !year ||
+        !month ||
+        !day
+      ) {
+        return String(dateString);
+      }
+
+      return new Intl.DateTimeFormat(
+        "fa-IR"
+      ).format(
+        new Date(
+          year,
+          month - 1,
+          day
+        )
+      );
+
+    }
+
+
+    /* ==========================================
+       مرتب‌سازی تاریخ‌ها
+    ========================================== */
+
+    const dates =
+      Object.keys(groupedByDate)
+        .sort((a, b) =>
+          b.localeCompare(a)
+        );
+
+
+    /* ==========================================
+       ساخت خروجی
+    ========================================== */
+
+    box.innerHTML = dates.map(date => {
+
+      const dayActivities =
+        groupedByDate[date];
+
+
+      /* ========================================
+         گروه‌بندی افراد همان روز
+      ======================================== */
+
+      const people = {};
+
+
+      dayActivities.forEach(item => {
+
+        const person =
+          item.person_name ||
+          "بدون نام";
+
+
+        if (!people[person]) {
+
+          people[person] = {
+
+            hours: 0,
+
+            projects: [],
+
+            descriptions: []
+
+          };
+
+        }
+
+
+        people[person].hours +=
+          Number(item.hours || 0);
+
+
+        /* پروژه */
+
+        if (item.project_id) {
+
+          const projectName =
+            projects[item.project_id];
+
+          if (
+            projectName &&
+            !people[person].projects.includes(
+              projectName
+            )
+          ) {
+
+            people[person].projects.push(
+              projectName
+            );
+
+          }
+
+        }
+
+
+        /* توضیحات */
+
+        if (item.description) {
+
+          if (
+            !people[person].descriptions.includes(
+              item.description
+            )
+          ) {
+
+            people[person].descriptions.push(
+              item.description
+            );
+
+          }
+
+        }
+
+      });
+
+
+      const peopleEntries =
+        Object.entries(people);
+
+
+      /* ========================================
+         آکاردئون روز
+      ======================================== */
+
+      return `
+
+        <details class="accounting-accordion">
+
+          <summary>
+
+            <span>
+              📅 ${formatWorkerDate(date)}
+            </span>
+
+            <span class="pill">
+              ${peopleEntries.length} نفر
+            </span>
+
+          </summary>
+
+
+          <div class="accordion-content">
+
+            ${
+              peopleEntries.length
+
+              ?
+
+              peopleEntries.map(
+                ([person, info]) => `
+
+                  <div
+                    style="
+                      background:#f9fafb;
+                      border:1px solid #e5e7eb;
+                      border-radius:14px;
+                      padding:14px;
+                      margin-bottom:10px;
+                    "
+                  >
+
+                    <div
+                      style="
+                        display:flex;
+                        justify-content:space-between;
+                        align-items:center;
+                        gap:10px;
+                      "
+                    >
+
+                      <strong>
+                        👤 ${esc(person)}
+                      </strong>
+
+
+                      <strong class="success">
+                        ⏱️ ${info.hours}
+                        ساعت
+                      </strong>
+
+                    </div>
+
+
+                    ${
+                      info.projects.length
+
+                      ?
+
+                      `
+                        <div
+                          class="muted"
+                          style="margin-top:8px"
+                        >
+                          🏗️ پروژه:
+                          ${esc(
+                            info.projects.join(" • ")
+                          )}
+                        </div>
+                      `
+
+                      :
+
+                      ""
+                    }
+
+
+                    ${
+                      info.descriptions.length
+
+                      ?
+
+                      `
+                        <div
+                          class="muted"
+                          style="margin-top:7px"
+                        >
+                          📝
+                          ${esc(
+                            info.descriptions.join(" • ")
+                          )}
+                        </div>
+                      `
+
+                      :
+
+                      ""
+                    }
+
+                  </div>
+
+                `
+              ).join("")
+
+              :
+
+              `
+                <div class="empty">
+                  فعالیتی برای این روز ثبت نشده.
+                </div>
+              `
+            }
+
+          </div>
+
+        </details>
+
+      `;
+
+    }).join("");
+
+
+  } catch (error) {
+
+    console.error(
+      "WORKER ACTIVITIES ERROR:",
+      error
+    );
+
 
     box.innerHTML = `
-      <div class="notice"
-        style="
-          background:#fef2f2;
-          border-color:#fecaca;
-          color:#991b1b;
-        ">
+
+      <div class="notice error-box">
+
         ❌ خطا در دریافت فعالیت‌ها
-        <br>
-        <small>${esc(e?.message || String(e))}</small>
+
+        <br><br>
+
+        <small>
+          ${esc(
+            error?.message ||
+            String(error)
+          )}
+        </small>
+
       </div>
+
     `;
+
   }
+
 }
 
     async function loadPurchases() {
