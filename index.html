@@ -3156,7 +3156,7 @@ async function loadPersonalExpenses() {
       .from("personal_expenses")
       .select(`
         id,
-        title,
+        item_name,
         category,
         amount_toman,
         expense_date,
@@ -3172,17 +3172,11 @@ async function loadPersonalExpenses() {
     if (error) {
       throw error;
     }
-    console.log(
-      "Personal expenses:",
-      data
-    );
+    console.log("Personal expenses:", data);
     if (!data || data.length === 0) {
       table.innerHTML = `
         <tr>
-          <td
-            colspan="5"
-            style="text-align:center"
-          >
+          <td colspan="5" style="text-align:center">
             🛍️ هنوز هزینه شخصی ثبت نشده.
           </td>
         </tr>
@@ -3194,8 +3188,7 @@ async function loadPersonalExpenses() {
     }
     const formatMoney = value => {
       return (
-        Number(value || 0)
-          .toLocaleString("fa-IR")
+        Number(value || 0).toLocaleString("fa-IR")
         + " تومان"
       );
     };
@@ -3203,13 +3196,11 @@ async function loadPersonalExpenses() {
       if (!value) {
         return "-";
       }
-      try {
-        return new Date(
-          value + "T00:00:00"
-        ).toLocaleDateString("fa-IR");
-      } catch {
+      const date = new Date(value + "T00:00:00");
+      if (isNaN(date.getTime())) {
         return String(value);
       }
+      return date.toLocaleDateString("fa-IR");
     };
     const total = data.reduce(
       (sum, item) =>
@@ -3249,29 +3240,27 @@ async function loadPersonalExpenses() {
       `;
     }
     table.innerHTML = data.map(item => {
-      const title =
-        item.title ||
-        "بدون عنوان";
-      const category =
-        item.category ||
-        "-";
-      const amount =
-        Number(item.amount_toman || 0);
       return `
         <tr>
           <td>
             <b>
-              ${esc(title)}
+              🛍️ ${esc(item.item_name || "بدون عنوان")}
             </b>
           </td>
           <td>
-            <span class="pill">
-              ${esc(category)}
-            </span>
+            ${
+              item.category
+                ? `
+                  <span class="pill">
+                    ${esc(item.category)}
+                  </span>
+                `
+                : "-"
+            }
           </td>
           <td>
             <b>
-              ${formatMoney(amount)}
+              ${formatMoney(item.amount_toman)}
             </b>
           </td>
           <td>
