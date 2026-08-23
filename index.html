@@ -3063,10 +3063,10 @@ async function loadInventory() {
                     id,
                     project_id,
                     item_name,
-                    quantity,
                     unit,
                     current_quantity,
-                    created_at
+                    created_at,
+                    updated_at
                 `)
                 .order("item_name");
 
@@ -3088,7 +3088,7 @@ async function loadInventory() {
                 .from("inventory_movements")
                 .select(`
                     id,
-                    inventory_item_id,
+                    item_id,
                     project_id,
                     movement_type,
                     quantity,
