@@ -849,17 +849,1538 @@ footer{
 </section>
 
 
-<!-- INVENTORY -->
+/* =====================================================
+   INVENTORY SYSTEM
+===================================================== */
 
-<section id="inventory" class="view">
+async function loadInventory() {
 
+  const box = document.getElementById("inventoryList");
+
+  if (!box) return;
+
+  box.innerHTML = `
     <div class="empty">
-        📦 بخش انبار
+      ⏳ در حال دریافت موجودی انبار...
+    </div>
+  `;
+
+  try {
+
+    if (!sb) {
+      throw new Error("اتصال به Supabase برقرار نیست.");
+    }
+
+    /* =========================
+       دریافت کالاها
+    ========================= */
+
+    const { data: items, error: itemsError } = await sb
+      .from("inventory_items")
+      .select(`
+        id,
+        project_id,
+        item_name,
+        unit,
+        current_quantity,
+        created_at,
+        updated_at
+      `)
+      .order("item_name", {
+        ascending: true
+      });
+
+    if (itemsError) {
+      throw itemsError;
+    }
+
+
+    /* =========================
+       پروژه‌ها
+    ========================= */
+
+    const projects = {};
+
+    Object.entries(db.projects || {}).forEach(
+      ([name, project]) => {
+
+        if (project?.id) {
+          projects[project.id] = name;
+        }
+
+      }
+    );
+
+
+    if (!items || items.length === 0) {
+
+      box.innerHTML = `
+        <div class="empty">
+          📦 هنوز کالایی در انبار ثبت نشده.
+        </div>
+      `;
+
+      return;
+    }
+
+
+    /* =========================
+       گروه‌بندی بر اساس پروژه
+    ========================= */
+
+    const grouped = {};
+
+    items.forEach(item => {
+
+      const projectName =
+        projects[item.project_id] ||
+        "پروژه نامشخص";
+
+      if (!grouped[projectName]) {
+        grouped[projectName] = [];
+      }
+
+      grouped[projectName].push(item);
+
+    });
+
+
+    /* =========================
+       نمایش
+    ========================= */
+
+    box.innerHTML = Object.entries(grouped)
+      .map(([projectName, projectItems]) => {
+
+        const totalItems =
+          projectItems.length;
+
+        return `
+
+          <details class="accounting-accordion">
+
+            <summary>
+
+              <span>
+                🏗️ ${esc(projectName)}
+              </span>
+
+              <span class="pill">
+                ${totalItems} قلم
+              </span>
+
+            </summary>
+
+
+            <div class="accordion-content">
+
+              <div class="table-wrap">
+
+                <table>
+
+                  <thead>
+
+                    <tr>
+
+                      <th>
+                        کالا
+                      </th>
+
+                      <th>
+                        موجودی
+                      </th>
+
+                      <th>
+                        واحد
+                      </th>
+
+                      <th>
+                        عملیات
+                      </th>
+
+                    </tr>
+
+                  </thead>
+
+
+                  <tbody>
+
+                    ${
+                      projectItems.map(item => `
+
+                        <tr>
+
+                          <td>
+                            <b>
+                              📦 ${esc(item.item_name)}
+                            </b>
+                          </td>
+
+                          <td>
+
+                            <b
+                              class="${
+                                Number(
+                                  item.current_quantity || 0
+                                ) > 0
+                                ? "success"
+                                : "danger"
+                              }"
+                            >
+
+                              ${Number(
+                                item.current_quantity || 0
+                              ).toLocaleString("fa-IR")}
+
+                            </b>
+
+                          </td>
+
+                          <td>
+                            ${esc(item.unit || "-")}
+                          </td>
+
+                          <td>
+
+                            <button
+                              class="btn green"
+                              style="padding:7px 10px"
+                              onclick="
+                                inventoryMovement(
+                                  '${item.id}',
+                                  '${item.project_id}',
+                                  'in'
+                                )
+                              "
+                            >
+                              ➕
+                            </button>
+
+
+                            <button
+                              class="btn red"
+                              style="padding:7px 10px"
+                              onclick="
+                                inventoryMovement(
+                                  '${item.id}',
+                                  '${item.project_id}',
+                                  'out'
+                                )
+                              "
+                            >
+                              ➖
+                            </button>
+
+                          </td>
+
+                        </tr>
+
+                      `).join("")
+
+                    }
+
+                  </tbody>
+
+                </table>
+
+              </div>
+
+
+              <div
+                style="
+                  display:flex;
+                  gap:8px;
+                  flex-wrap:wrap;
+                  margin-top:12px;
+                "
+              >
+
+                <button
+                  class="btn light"
+                  onclick="
+                    inventoryNewItem(
+                      '${projectItems[0].project_id}'
+                    )
+                  "
+                >
+                  📦 کالای جدید
+                </button>
+
+
+                <button
+                  class="btn"
+                  onclick="
+                    inventoryTransfer(
+                      '${projectItems[0].project_id}'
+                    )
+                  "
+                >
+                  🔄 انتقال کالا
+                </button>
+
+              </div>
+
+            </div>
+
+          </details>
+
+        `;
+
+      })
+      .join("");
+
+
+  } catch (error) {
+
+    console.error(
+      "INVENTORY ERROR:",
+      error
+    );
+
+    box.innerHTML = `
+
+      <div class="notice error-box">
+
+        ❌ خطا در دریافت موجودی انبار
+
         <br><br>
-        ساختار این بخش آماده توسعه است.
+
+        <small>
+          ${esc(
+            error?.message ||
+            String(error)
+          )}
+        </small>
+
+      </div>
+
+    `;
+
+  }
+
+}
+
+
+/* =====================================================
+   INVENTORY MOVEMENT
+===================================================== */
+
+async function inventoryMovement(
+  itemId,
+  projectId,
+  type
+) {
+
+  const item = {
+
+    id: itemId,
+
+    project_id: projectId
+
+  };
+
+
+  const title =
+    type === "in"
+      ? "➕ ورود کالا"
+      : "➖ خروج کالا";
+
+
+  openModal("inventoryMovement");
+
+
+  document.getElementById("modalBox").innerHTML = `
+
+    <h3>
+      ${title}
+    </h3>
+
+
+    <div>
+
+      <label>
+        مقدار
+      </label>
+
+      <input
+        id="inventoryQuantity"
+        type="number"
+        min="0.01"
+        step="any"
+        style="
+          width:100%;
+          padding:12px;
+          margin:7px 0 12px;
+          border:1px solid #ddd;
+          border-radius:10px;
+        "
+      >
+
+
+      <label>
+        واحد
+      </label>
+
+      <input
+        id="inventoryUnit"
+        type="text"
+        placeholder="عدد، کیلو، متر..."
+        style="
+          width:100%;
+          padding:12px;
+          margin:7px 0 12px;
+          border:1px solid #ddd;
+          border-radius:10px;
+        "
+      >
+
+
+      <label>
+        تاریخ
+      </label>
+
+      <input
+        id="inventoryDate"
+        type="date"
+        value="${new Date().toISOString().slice(0,10)}"
+        style="
+          width:100%;
+          padding:12px;
+          margin:7px 0 12px;
+          border:1px solid #ddd;
+          border-radius:10px;
+        "
+      >
+
+
+      <label>
+        توضیحات
+      </label>
+
+      <textarea
+        id="inventoryDescription"
+        placeholder="مثلاً خرید جدید، مصرف طبقه نهم..."
+        style="
+          width:100%;
+          min-height:90px;
+          padding:12px;
+          margin:7px 0 12px;
+          border:1px solid #ddd;
+          border-radius:10px;
+        "
+      ></textarea>
+
+
+      <button
+        class="btn ${
+          type === "in"
+            ? "green"
+            : "red"
+        }"
+        onclick="
+          saveInventoryMovement(
+            '${item.id}',
+            '${item.project_id}',
+            '${type}'
+          )
+        "
+      >
+
+        ثبت
+
+      </button>
+
+
+      <button
+        class="btn light"
+        onclick="closeModal()"
+      >
+
+        انصراف
+
+      </button>
+
     </div>
 
-</section>
+  `;
+
+}
+
+
+/* =====================================================
+   SAVE MOVEMENT
+===================================================== */
+
+async function saveInventoryMovement(
+  itemId,
+  projectId,
+  type
+) {
+
+  try {
+
+    const quantity =
+      Number(
+        document.getElementById(
+          "inventoryQuantity"
+        ).value
+      );
+
+
+    const unit =
+      document.getElementById(
+        "inventoryUnit"
+      ).value.trim();
+
+
+    const date =
+      document.getElementById(
+        "inventoryDate"
+      ).value;
+
+
+    const description =
+      document.getElementById(
+        "inventoryDescription"
+      ).value.trim();
+
+
+    if (
+      !quantity ||
+      quantity <= 0
+    ) {
+
+      alert(
+        "مقدار کالا را وارد کن."
+      );
+
+      return;
+
+    }
+
+
+    if (!date) {
+
+      alert(
+        "تاریخ را وارد کن."
+      );
+
+      return;
+
+    }
+
+
+    /* =========================
+       دریافت موجودی فعلی
+    ========================= */
+
+    const {
+      data: current,
+      error: currentError
+    } = await sb
+      .from("inventory_items")
+      .select("current_quantity")
+      .eq("id", itemId)
+      .single();
+
+
+    if (currentError) {
+      throw currentError;
+    }
+
+
+    const oldQuantity =
+      Number(
+        current.current_quantity || 0
+      );
+
+
+    /* =========================
+       محاسبه موجودی جدید
+    ========================= */
+
+    let newQuantity;
+
+
+    if (type === "in") {
+
+      newQuantity =
+        oldQuantity + quantity;
+
+    } else {
+
+      newQuantity =
+        oldQuantity - quantity;
+
+
+      if (newQuantity < 0) {
+
+        alert(
+          "❌ موجودی کافی نیست."
+        );
+
+        return;
+
+      }
+
+    }
+
+
+    /* =========================
+       ثبت Movement
+    ========================= */
+
+    const {
+      data: movement,
+      error: movementError
+    } = await sb
+      .from("inventory_movements")
+      .insert({
+
+        project_id:
+          projectId,
+
+        item_id:
+          itemId,
+
+        movement_type:
+          type,
+
+        quantity:
+          quantity,
+
+        unit:
+          unit || null,
+
+        movement_date:
+          date,
+
+        description:
+          description || null
+
+      })
+      .select()
+      .single();
+
+
+    if (movementError) {
+      throw movementError;
+    }
+
+
+    /* =========================
+       آپدیت موجودی
+    ========================= */
+
+    const {
+      error: updateError
+    } = await sb
+      .from("inventory_items")
+      .update({
+
+        current_quantity:
+          newQuantity,
+
+        unit:
+          unit || undefined,
+
+        updated_at:
+          new Date().toISOString()
+
+      })
+      .eq("id", itemId);
+
+
+    if (updateError) {
+
+      /*
+        اگر آپدیت موجودی شکست بخورد،
+        Movement قبلاً ثبت شده.
+      */
+
+      throw updateError;
+
+    }
+
+
+    closeModal();
+
+    await loadInventory();
+
+
+    alert(
+      type === "in"
+        ? "✅ ورود کالا ثبت شد."
+        : "✅ خروج کالا ثبت شد."
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "SAVE INVENTORY MOVEMENT ERROR:",
+      error
+    );
+
+
+    alert(
+      "❌ خطا: " +
+      (
+        error?.message ||
+        String(error)
+      )
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   NEW INVENTORY ITEM
+===================================================== */
+
+function inventoryNewItem(
+  projectId
+) {
+
+  openModal("inventoryNewItem");
+
+
+  document.getElementById(
+    "modalBox"
+  ).innerHTML = `
+
+    <h3>
+      📦 ثبت کالای جدید
+    </h3>
+
+
+    <label>
+      نام کالا
+    </label>
+
+    <input
+      id="newInventoryName"
+      type="text"
+      placeholder="مثلاً سیمان"
+      style="
+        width:100%;
+        padding:12px;
+        margin:7px 0 12px;
+        border:1px solid #ddd;
+        border-radius:10px;
+      "
+    >
+
+
+    <label>
+      واحد
+    </label>
+
+    <input
+      id="newInventoryUnit"
+      type="text"
+      placeholder="عدد، کیسه، متر..."
+      style="
+        width:100%;
+        padding:12px;
+        margin:7px 0 12px;
+        border:1px solid #ddd;
+        border-radius:10px;
+      "
+    >
+
+
+    <label>
+      موجودی اولیه
+    </label>
+
+    <input
+      id="newInventoryQuantity"
+      type="number"
+      min="0"
+      step="any"
+      value="0"
+      style="
+        width:100%;
+        padding:12px;
+        margin:7px 0 12px;
+        border:1px solid #ddd;
+        border-radius:10px;
+      "
+    >
+
+
+    <button
+      class="btn green"
+      onclick="
+        saveNewInventoryItem(
+          '${projectId}'
+        )
+      "
+    >
+      ثبت کالا
+    </button>
+
+
+    <button
+      class="btn light"
+      onclick="closeModal()"
+    >
+      انصراف
+    </button>
+
+  `;
+
+}
+
+
+/* =====================================================
+   SAVE NEW ITEM
+===================================================== */
+
+async function saveNewInventoryItem(
+  projectId
+) {
+
+  try {
+
+    const name =
+      document.getElementById(
+        "newInventoryName"
+      ).value.trim();
+
+
+    const unit =
+      document.getElementById(
+        "newInventoryUnit"
+      ).value.trim();
+
+
+    const quantity =
+      Number(
+        document.getElementById(
+          "newInventoryQuantity"
+        ).value
+      );
+
+
+    if (!name) {
+
+      alert(
+        "نام کالا را وارد کن."
+      );
+
+      return;
+
+    }
+
+
+    if (quantity < 0) {
+
+      alert(
+        "موجودی نمی‌تواند منفی باشد."
+      );
+
+      return;
+
+    }
+
+
+    const {
+      error
+    } = await sb
+      .from("inventory_items")
+      .insert({
+
+        project_id:
+          projectId,
+
+        item_name:
+          name,
+
+        unit:
+          unit || null,
+
+        current_quantity:
+          quantity
+
+      });
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    closeModal();
+
+    await loadInventory();
+
+
+    alert(
+      "✅ کالا با موفقیت ثبت شد."
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "NEW INVENTORY ITEM ERROR:",
+      error
+    );
+
+
+    alert(
+      "❌ خطا: " +
+      (
+        error?.message ||
+        String(error)
+      )
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   TRANSFER
+===================================================== */
+
+async function inventoryTransfer(
+  fromProjectId
+) {
+
+  const projects =
+    Object.entries(
+      db.projects || {}
+    );
+
+
+  const projectOptions =
+    projects
+      .filter(
+        ([, project]) =>
+          project.id !==
+          fromProjectId
+      )
+      .map(
+        ([name, project]) =>
+          `
+            <option
+              value="${project.id}"
+            >
+              ${esc(name)}
+            </option>
+          `
+      )
+      .join("");
+
+
+  /* =========================
+     دریافت کالاهای پروژه
+  ========================= */
+
+  const {
+    data: items,
+    error
+  } = await sb
+    .from("inventory_items")
+    .select(`
+      id,
+      item_name,
+      unit,
+      current_quantity
+    `)
+    .eq(
+      "project_id",
+      fromProjectId
+    )
+    .order(
+      "item_name"
+    );
+
+
+  if (error) {
+
+    alert(
+      "❌ خطا در دریافت کالاها"
+    );
+
+    return;
+
+  }
+
+
+  if (!items || !items.length) {
+
+    alert(
+      "برای این پروژه کالایی وجود ندارد."
+    );
+
+    return;
+
+  }
+
+
+  openModal(
+    "inventoryTransfer"
+  );
+
+
+  document.getElementById(
+    "modalBox"
+  ).innerHTML = `
+
+    <h3>
+      🔄 انتقال کالا
+    </h3>
+
+
+    <label>
+      کالا
+    </label>
+
+    <select
+      id="transferItem"
+      style="
+        width:100%;
+        padding:12px;
+        margin:7px 0 12px;
+        border:1px solid #ddd;
+        border-radius:10px;
+      "
+    >
+
+      ${
+        items.map(item => `
+
+          <option
+            value="${item.id}"
+          >
+            ${esc(item.item_name)}
+            — موجودی:
+            ${Number(
+              item.current_quantity || 0
+            ).toLocaleString("fa-IR")}
+            ${esc(item.unit || "")}
+          </option>
+
+        `).join("")
+      }
+
+    </select>
+
+
+    <label>
+      پروژه مقصد
+    </label>
+
+    <select
+      id="transferProject"
+      style="
+        width:100%;
+        padding:12px;
+        margin:7px 0 12px;
+        border:1px solid #ddd;
+        border-radius:10px;
+      "
+    >
+
+      ${projectOptions}
+
+    </select>
+
+
+    <label>
+      مقدار
+    </label>
+
+    <input
+      id="transferQuantity"
+      type="number"
+      min="0.01"
+      step="any"
+      style="
+        width:100%;
+        padding:12px;
+        margin:7px 0 12px;
+        border:1px solid #ddd;
+        border-radius:10px;
+      "
+    >
+
+
+    <label>
+      تاریخ
+    </label>
+
+    <input
+      id="transferDate"
+      type="date"
+      value="${new Date().toISOString().slice(0,10)}"
+      style="
+        width:100%;
+        padding:12px;
+        margin:7px 0 12px;
+        border:1px solid #ddd;
+        border-radius:10px;
+      "
+    >
+
+
+    <label>
+      توضیحات
+    </label>
+
+    <textarea
+      id="transferDescription"
+      style="
+        width:100%;
+        min-height:80px;
+        padding:12px;
+        margin:7px 0 12px;
+        border:1px solid #ddd;
+        border-radius:10px;
+      "
+    ></textarea>
+
+
+    <button
+      class="btn"
+      onclick="
+        saveInventoryTransfer(
+          '${fromProjectId}'
+        )
+      "
+    >
+      🔄 ثبت انتقال
+    </button>
+
+
+    <button
+      class="btn light"
+      onclick="closeModal()"
+    >
+      انصراف
+    </button>
+
+  `;
+
+}
+
+
+/* =====================================================
+   SAVE TRANSFER
+===================================================== */
+
+async function saveInventoryTransfer(
+  fromProjectId
+) {
+
+  try {
+
+    const itemId =
+      document.getElementById(
+        "transferItem"
+      ).value;
+
+
+    const toProjectId =
+      document.getElementById(
+        "transferProject"
+      ).value;
+
+
+    const quantity =
+      Number(
+        document.getElementById(
+          "transferQuantity"
+        ).value
+      );
+
+
+    const date =
+      document.getElementById(
+        "transferDate"
+      ).value;
+
+
+    const description =
+      document.getElementById(
+        "transferDescription"
+      ).value.trim();
+
+
+    if (!itemId || !toProjectId) {
+
+      alert(
+        "کالا و پروژه مقصد را انتخاب کن."
+      );
+
+      return;
+
+    }
+
+
+    if (
+      !quantity ||
+      quantity <= 0
+    ) {
+
+      alert(
+        "مقدار انتقال را وارد کن."
+      );
+
+      return;
+
+    }
+
+
+    /* =========================
+       کالای مبدا
+    ========================= */
+
+    const {
+      data: sourceItem,
+      error: sourceError
+    } = await sb
+      .from("inventory_items")
+      .select(`
+        id,
+        item_name,
+        unit,
+        current_quantity
+      `)
+      .eq(
+        "id",
+        itemId
+      )
+      .single();
+
+
+    if (sourceError) {
+      throw sourceError;
+    }
+
+
+    const oldQuantity =
+      Number(
+        sourceItem.current_quantity || 0
+      );
+
+
+    if (
+      quantity >
+      oldQuantity
+    ) {
+
+      alert(
+        "❌ موجودی پروژه مبدا کافی نیست."
+      );
+
+      return;
+
+    }
+
+
+    /* =========================
+       پیدا کردن کالای مقصد
+    ========================= */
+
+    let {
+      data: destinationItem,
+      error: destinationError
+    } = await sb
+      .from("inventory_items")
+      .select(`
+        id,
+        current_quantity,
+        unit
+      `)
+      .eq(
+        "project_id",
+        toProjectId
+      )
+      .eq(
+        "item_name",
+        sourceItem.item_name
+      )
+      .maybeSingle();
+
+
+    if (destinationError) {
+      throw destinationError;
+    }
+
+
+    /* =========================
+       اگر مقصد کالا ندارد
+    ========================= */
+
+    if (!destinationItem) {
+
+      const {
+        data: newItem,
+        error: createError
+      } = await sb
+        .from("inventory_items")
+        .insert({
+
+          project_id:
+            toProjectId,
+
+          item_name:
+            sourceItem.item_name,
+
+          unit:
+            sourceItem.unit,
+
+          current_quantity:
+            quantity
+
+        })
+        .select()
+        .single();
+
+
+      if (createError) {
+        throw createError;
+      }
+
+
+      destinationItem =
+        newItem;
+
+    }
+
+
+    else {
+
+      const {
+        error: destinationUpdateError
+      } = await sb
+        .from("inventory_items")
+        .update({
+
+          current_quantity:
+            Number(
+              destinationItem.current_quantity || 0
+            ) + quantity,
+
+          updated_at:
+            new Date().toISOString()
+
+        })
+        .eq(
+          "id",
+          destinationItem.id
+        );
+
+
+      if (destinationUpdateError) {
+        throw destinationUpdateError;
+      }
+
+    }
+
+
+    /* =========================
+       کاهش موجودی مبدا
+    ========================= */
+
+    const {
+      error: sourceUpdateError
+    } = await sb
+      .from("inventory_items")
+      .update({
+
+        current_quantity:
+          oldQuantity - quantity,
+
+        updated_at:
+          new Date().toISOString()
+
+      })
+      .eq(
+        "id",
+        sourceItem.id
+      );
+
+
+    if (sourceUpdateError) {
+      throw sourceUpdateError;
+    }
+
+
+    /* =========================
+       Movement خروج
+    ========================= */
+
+    const {
+      data: transferOut,
+      error: outError
+    } = await sb
+      .from("inventory_movements")
+      .insert({
+
+        project_id:
+          fromProjectId,
+
+        item_id:
+          sourceItem.id,
+
+        movement_type:
+          "transfer_out",
+
+        quantity:
+          quantity,
+
+        unit:
+          sourceItem.unit,
+
+        movement_date:
+          date,
+
+        description:
+          description ||
+          "انتقال به پروژه دیگر"
+
+      })
+      .select()
+      .single();
+
+
+    if (outError) {
+      throw outError;
+    }
+
+
+    /* =========================
+       Movement ورود
+    ========================= */
+
+    const {
+      data: transferIn,
+      error: inError
+    } = await sb
+      .from("inventory_movements")
+      .insert({
+
+        project_id:
+          toProjectId,
+
+        item_id:
+          destinationItem.id,
+
+        movement_type:
+          "transfer_in",
+
+        quantity:
+          quantity,
+
+        unit:
+          sourceItem.unit,
+
+        movement_date:
+          date,
+
+        description:
+          description ||
+          "انتقال از پروژه دیگر",
+
+        related_movement_id:
+          transferOut.id
+
+      })
+      .select()
+      .single();
+
+
+    if (inError) {
+      throw inError;
+    }
+
+
+    /* =========================
+       اتصال Movement مبدا
+    ========================= */
+
+    await sb
+      .from("inventory_movements")
+      .update({
+
+        related_movement_id:
+          transferIn.id
+
+      })
+      .eq(
+        "id",
+        transferOut.id
+      );
+
+
+    closeModal();
+
+    await loadInventory();
+
+
+    alert(
+      "✅ انتقال کالا با موفقیت ثبت شد."
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "TRANSFER ERROR:",
+      error
+    );
+
+
+    alert(
+      "❌ خطا در انتقال: " +
+      (
+        error?.message ||
+        String(error)
+      )
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   INVENTORY NAVIGATION
+===================================================== */
+
+const originalGoTo =
+  window.goTo;
+
+
+window.goTo = function(
+  id,
+  button
+) {
+
+  originalGoTo(
+    id,
+    button
+  );
+
+
+  if (
+    id === "inventory"
+  ) {
+
+    loadInventory();
+
+  }
+
+};
 
 
 <!-- PURCHASES -->
