@@ -855,66 +855,30 @@ footer{
 
     <div class="toolbar">
 
-        <button class="btn light" onclick="loadInventory()">
+        <button
+            class="btn light"
+            onclick="loadInventory()"
+        >
             🔄 تازه‌سازی
         </button>
 
     </div>
 
 
-    <!-- خلاصه انبار -->
+    <div class="card">
 
-    <div
-        id="inventoryStats"
-        class="grid"
-    >
+        <h2 style="margin-top:0">
+            📦 موجودی انبار
+        </h2>
 
-        <div class="card stat">
-            <small>📦 تعداد اقلام</small>
-            <strong>...</strong>
-        </div>
+        <p class="muted">
+            فقط کالاها و اقلامی که موجودی فیزیکی دارند
+        </p>
 
-        <div class="card stat">
-            <small>🏗️ پروژه‌های دارای موجودی</small>
-            <strong>...</strong>
-        </div>
-
-        <div class="card stat">
-            <small>📥 مجموع ورود</small>
-            <strong>...</strong>
-        </div>
-
-        <div class="card stat">
-            <small>📤 مجموع خروج</small>
-            <strong>...</strong>
-        </div>
-
-    </div>
-
-
-    <div class="section">
-
-        <h2>📦 موجودی پروژه‌ها</h2>
-
-        <div id="inventoryProjects">
+        <div id="inventoryList">
 
             <div class="empty">
-                ⏳ در حال دریافت موجودی...
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <div class="section">
-
-        <h2>📜 آخرین حرکات انبار</h2>
-
-        <div id="inventoryMovements">
-
-            <div class="empty">
-                ⏳ در حال دریافت تاریخچه...
+                ⏳ در حال دریافت موجودی انبار...
             </div>
 
         </div>
@@ -3020,621 +2984,351 @@ async function loadWorkerActivities() {
 
 async function loadInventory() {
 
-    const projectsBox =
-        document.getElementById("inventoryProjects");
-
-    const movementsBox =
-        document.getElementById("inventoryMovements");
-
-    const statsBox =
-        document.getElementById("inventoryStats");
-
-    if (!projectsBox || !movementsBox) return;
-
-    projectsBox.innerHTML = `
-        <div class="empty">
-            ⏳ در حال دریافت موجودی...
-        </div>
-    `;
-
-    movementsBox.innerHTML = `
-        <div class="empty">
-            ⏳ در حال دریافت تاریخچه...
-        </div>
-    `;
-
-    try {
-
-        if (!sb) {
-            throw new Error(
-                "اتصال به Supabase برقرار نیست."
-            );
-        }
-
-
-        /* ===============================
-           دریافت موجودی
-        =============================== */
-
-        const { data: items, error: itemsError } =
-            await sb
-                .from("inventory_items")
-                .select(`
-                    id,
-                    project_id,
-                    item_name,
-                    unit,
-                    current_quantity,
-                    created_at,
-                    updated_at
-                `)
-                .order("item_name");
-
-
-        if (itemsError) {
-            throw itemsError;
-        }
-
-
-        /* ===============================
-           دریافت حرکات
-        =============================== */
-
-        const {
-            data: movements,
-            error: movementsError
-        } =
-            await sb
-                .from("inventory_movements")
-                .select(`
-                    id,
-                    item_id,
-                    project_id,
-                    movement_type,
-                    quantity,
-                    unit,
-                    movement_date,
-                    description,
-                    created_at
-                `)
-                .order(
-                    "movement_date",
-                    {
-                        ascending: false
-                    }
-                )
-                .order(
-                    "created_at",
-                    {
-                        ascending: false
-                    }
-                );
-
-
-        if (movementsError) {
-            throw movementsError;
-        }
-
-
-        /* ===============================
-           پروژه‌ها
-        =============================== */
-
-        const projectsById = {};
-
-        Object.entries(
-            db.projects || {}
-        ).forEach(
-            ([name, project]) => {
+  const box = document.getElementById("inventoryList");
+
+  if (!box) {
+    console.error("inventoryList پیدا نشد");
+    return;
+  }
+
+  box.innerHTML = `
+    <div class="empty">
+      ⏳ در حال دریافت موجودی انبار...
+    </div>
+  `;
+
+  try {
+
+    if (!sb) {
+      throw new Error("اتصال به Supabase برقرار نیست.");
+    }
+
+    /* =====================================================
+       دریافت اقلام انبار
+    ===================================================== */
+
+    const { data, error } = await sb
+      .from("inventory_items")
+      .select(`
+        id,
+        project_id,
+        item_name,
+        unit,
+        current_quantity,
+        created_at,
+        updated_at
+      `)
+      .order("item_name", {
+        ascending: true
+      });
+
+    if (error) {
+      throw error;
+    }
+
+
+    /* =====================================================
+       فیلتر اقلام غیرانبار
+       
+       این موارد نباید موجودی فیزیکی محسوب شوند:
+       - کرایه
+       - حمل
+       - غذا / ناهار
+       - تعمیر
+       - خدمات
+       - دستمزد
+       - پذیرایی
+    ===================================================== */
+
+    const NON_INVENTORY_WORDS = [
+
+      "کرایه",
+      "حمل",
+      "باربری",
+      "بارگیری",
+      "تخلیه",
+
+      "ناهار",
+      "غذا",
+      "صبحانه",
+      "شام",
+      "پذیرایی",
+
+      "تعمیر",
+      "سرویس",
+      "خدمات",
+      "دستمزد",
+      "اجرت",
+
+      "هزینه"
+
+    ];
+
+
+    function isRealInventoryItem(item) {
+
+      const name =
+        String(
+          item?.item_name || ""
+        ).trim().toLowerCase();
+
+
+      if (!name) {
+        return false;
+      }
+
+
+      return !NON_INVENTORY_WORDS.some(
+        word =>
+          name.includes(
+            word
+          )
+      );
+
+    }
 
-                if (project?.id) {
 
-                    projectsById[
-                        project.id
-                    ] = name;
+    const inventoryItems =
+      (data || []).filter(
+        isRealInventoryItem
+      );
 
-                }
 
-            }
-        );
+    /* =====================================================
+       دریافت پروژه‌ها
+    ===================================================== */
 
-
-        /* ===============================
-           آمار
-        =============================== */
-
-        const totalItems =
-            (items || []).length;
-
-
-        const projectsWithStock =
-            new Set(
-                (items || [])
-                    .filter(
-                        item =>
-                            Number(
-                                item.current_quantity || 0
-                            ) > 0
-                    )
-                    .map(
-                        item =>
-                            item.project_id
-                    )
-            ).size;
-
-
-        const totalIn =
-            (movements || [])
-                .filter(
-                    m =>
-                        m.movement_type === "in" ||
-                        m.movement_type === "transfer_in"
-                )
-                .reduce(
-                    (sum, m) =>
-                        sum +
-                        Number(
-                            m.quantity || 0
-                        ),
-                    0
-                );
-
-
-        const totalOut =
-            (movements || [])
-                .filter(
-                    m =>
-                        m.movement_type === "out" ||
-                        m.movement_type === "transfer_out"
-                )
-                .reduce(
-                    (sum, m) =>
-                        sum +
-                        Number(
-                            m.quantity || 0
-                        ),
-                    0
-                );
-
-
-        statsBox.innerHTML = `
-
-            <div class="card stat">
-
-                <small>
-                    📦 تعداد اقلام
-                </small>
-
-                <strong>
-                    ${totalItems.toLocaleString("fa-IR")}
-                </strong>
-
-            </div>
-
-
-            <div class="card stat">
-
-                <small>
-                    🏗️ پروژه‌های دارای موجودی
-                </small>
-
-                <strong>
-                    ${projectsWithStock.toLocaleString("fa-IR")}
-                </strong>
-
-            </div>
-
-
-            <div class="card stat">
-
-                <small>
-                    📥 مجموع ورود
-                </small>
-
-                <strong class="success">
-                    ${totalIn.toLocaleString("fa-IR")}
-                </strong>
-
-            </div>
-
-
-            <div class="card stat">
-
-                <small>
-                    📤 مجموع خروج
-                </small>
-
-                <strong class="danger">
-                    ${totalOut.toLocaleString("fa-IR")}
-                </strong>
-
-            </div>
-
-        `;
-
-
-        /* ===============================
-           گروه‌بندی بر اساس پروژه
-        =============================== */
-
-        const grouped = {};
-
-        (items || []).forEach(item => {
-
-            const projectName =
-                projectsById[
-                    item.project_id
-                ] || "پروژه نامشخص";
-
-
-            if (!grouped[projectName]) {
-
-                grouped[projectName] = [];
-
-            }
-
-
-            grouped[projectName].push(item);
-
+    const { data: projectsData, error: projectsError } =
+      await sb
+        .from("projects")
+        .select(`
+          id,
+          name
+        `)
+        .order("name", {
+          ascending: true
         });
 
 
-        /* ===============================
-           نمایش موجودی پروژه‌ها
-        =============================== */
-
-        const projectNames =
-            Object.keys(grouped)
-                .sort();
+    if (projectsError) {
+      throw projectsError;
+    }
 
 
-        if (projectNames.length === 0) {
-
-            projectsBox.innerHTML = `
-                <div class="empty">
-                    📦 هنوز موجودی‌ای ثبت نشده.
-                </div>
-            `;
-
-        } else {
-
-            projectsBox.innerHTML =
-                projectNames.map(
-                    projectName => {
-
-                        const projectItems =
-                            grouped[
-                                projectName
-                            ];
+    const projectsById =
+      Object.fromEntries(
+        (projectsData || []).map(
+          project => [
+            project.id,
+            project.name
+          ]
+        )
+      );
 
 
-                        const totalQuantity =
-                            projectItems.reduce(
-                                (sum, item) =>
-                                    sum +
-                                    Number(
-                                        item.current_quantity || 0
-                                    ),
-                                0
-                            );
+    /* =====================================================
+       اگر موجودی نداریم
+    ===================================================== */
+
+    if (
+      !inventoryItems ||
+      inventoryItems.length === 0
+    ) {
+
+      box.innerHTML = `
+        <div class="empty">
+          📦 هنوز موجودی واقعی برای انبار ثبت نشده.
+        </div>
+      `;
+
+      return;
+
+    }
+
+
+    /* =====================================================
+       گروه‌بندی بر اساس پروژه
+    ===================================================== */
+
+    const grouped = {};
+
+
+    inventoryItems.forEach(
+      item => {
+
+        const projectName =
+          projectsById[
+            item.project_id
+          ] ||
+          "پروژه نامشخص";
+
+
+        if (!grouped[projectName]) {
+
+          grouped[projectName] = [];
+
+        }
+
+
+        grouped[projectName].push(
+          item
+        );
+
+      }
+    );
+
+
+    /* =====================================================
+       ساخت خروجی
+    ===================================================== */
+
+    box.innerHTML =
+      Object.entries(grouped)
+        .map(
+          ([projectName, items]) => {
+
+            return `
+
+              <details class="accounting-accordion">
+
+                <summary>
+
+                  <span>
+                    🏗️ ${esc(projectName)}
+                  </span>
+
+                  <span class="pill">
+                    ${items.length.toLocaleString("fa-IR")}
+                    قلم
+                  </span>
+
+                </summary>
+
+
+                <div class="accordion-content">
+
+                  ${
+                    items.map(
+                      item => {
+
+                        const quantity =
+                          Number(
+                            item.current_quantity || 0
+                          );
+
+
+                        const unit =
+                          item.unit ||
+                          "عدد";
+
+
+                        const quantityClass =
+                          quantity > 0
+                            ? "success"
+                            : "danger";
 
 
                         return `
 
-                            <details
-                                class="accounting-accordion"
+                          <div
+                            style="
+                              background:#f9fafb;
+                              border:1px solid #e5e7eb;
+                              border-radius:14px;
+                              padding:14px;
+                              margin-bottom:10px;
+                            "
+                          >
+
+                            <div
+                              style="
+                                display:flex;
+                                justify-content:space-between;
+                                align-items:center;
+                                gap:10px;
+                              "
                             >
 
-                                <summary>
-
-                                    <span>
-                                        🏗️
-                                        ${esc(projectName)}
-                                    </span>
-
-                                    <span class="pill">
-                                        ${
-                                            projectItems.length
-                                        }
-                                        قلم
-                                    </span>
-
-                                </summary>
+                              <strong>
+                                📦 ${esc(
+                                  item.item_name
+                                )}
+                              </strong>
 
 
-                                <div
-                                    class="accordion-content"
-                                >
+                              <strong
+                                class="${quantityClass}"
+                              >
+                                ${quantity.toLocaleString("fa-IR")}
+                                ${esc(unit)}
+                              </strong>
 
-                                    ${
-                                        projectItems
-                                            .map(
-                                                item => {
-
-                                                    const qty =
-                                                        Number(
-                                                            item.current_quantity || 0
-                                                        );
+                            </div>
 
 
-                                                    return `
+                            <div
+                              class="muted"
+                              style="margin-top:8px"
+                            >
 
-                                                        <div
-                                                            class="card"
-                                                            style="
-                                                                margin-bottom:10px;
-                                                                box-shadow:none;
-                                                            "
-                                                        >
+                              موجودی فعلی:
+                              <b>
+                                ${quantity.toLocaleString("fa-IR")}
+                                ${esc(unit)}
+                              </b>
 
-                                                            <div
-                                                                class="row"
-                                                            >
+                            </div>
 
-                                                                <strong>
-                                                                    📦
-                                                                    ${
-                                                                        esc(
-                                                                            item.item_name
-                                                                        )
-                                                                    }
-                                                                </strong>
-
-
-                                                                <strong
-                                                                    class="${
-                                                                        qty > 0
-                                                                            ? "success"
-                                                                            : "danger"
-                                                                    }"
-                                                                >
-
-                                                                    ${
-                                                                        qty.toLocaleString(
-                                                                            "fa-IR"
-                                                                        )
-                                                                    }
-
-                                                                    ${
-                                                                        esc(
-                                                                            item.unit || "عدد"
-                                                                        )
-                                                                    }
-
-                                                                </strong>
-
-                                                            </div>
-
-                                                        </div>
-
-                                                    `;
-
-                                                }
-                                            )
-                                            .join("")
-                                    }
-
-                                </div>
-
-                            </details>
+                          </div>
 
                         `;
 
-                    }
-                ).join("");
+                      }
+                    ).join("")
 
-        }
+                  }
 
-
-        /* ===============================
-           تاریخچه حرکات
-        =============================== */
-
-        if (
-            !movements ||
-            movements.length === 0
-        ) {
-
-            movementsBox.innerHTML = `
-                <div class="empty">
-                    📜 هنوز حرکتی ثبت نشده.
                 </div>
+
+              </details>
+
             `;
 
-        } else {
-
-            movementsBox.innerHTML =
-                movements
-                    .slice(0, 50)
-                    .map(
-                        movement => {
-
-                            let icon = "📦";
-                            let typeText = "حرکت";
+          }
+        )
+        .join("");
 
 
-                            if (
-                                movement.movement_type ===
-                                "in"
-                            ) {
+  }
 
-                                icon = "🟢";
-                                typeText = "ورود";
+  catch (error) {
 
-                            }
-
-                            else if (
-                                movement.movement_type ===
-                                "out"
-                            ) {
-
-                                icon = "🔴";
-                                typeText = "خروج";
-
-                            }
-
-                            else if (
-                                movement.movement_type ===
-                                "transfer_in"
-                            ) {
-
-                                icon = "🔵";
-                                typeText =
-                                    "ورود انتقالی";
-
-                            }
-
-                            else if (
-                                movement.movement_type ===
-                                "transfer_out"
-                            ) {
-
-                                icon = "🟠";
-                                typeText =
-                                    "خروج انتقالی";
-
-                            }
+    console.error(
+      "INVENTORY ERROR:",
+      error
+    );
 
 
-                            const projectName =
-                                projectsById[
-                                    movement.project_id
-                                ] ||
-                                "پروژه نامشخص";
+    box.innerHTML = `
 
+      <div class="notice error-box">
 
-                            return `
+        ❌ خطا در دریافت موجودی انبار
 
-                                <details
-                                    class="accounting-accordion"
-                                >
+        <br><br>
 
-                                    <summary>
+        <small>
+          ${esc(
+            error?.message ||
+            String(error)
+          )}
+        </small>
 
-                                        <span>
+      </div>
 
-                                            ${icon}
+    `;
 
-                                            ${esc(
-                                                typeText
-                                            )}
-
-                                            —
-                                            ${esc(
-                                                projectName
-                                            )}
-
-                                        </span>
-
-
-                                        <span class="pill">
-
-                                            ${
-                                                Number(
-                                                    movement.quantity || 0
-                                                ).toLocaleString(
-                                                    "fa-IR"
-                                                )
-                                            }
-
-                                            ${
-                                                esc(
-                                                    movement.unit ||
-                                                    "عدد"
-                                                )
-                                            }
-
-                                        </span>
-
-                                    </summary>
-
-
-                                    <div
-                                        class="accordion-content"
-                                    >
-
-                                        <div
-                                            class="muted"
-                                        >
-
-                                            📅 تاریخ:
-                                            ${
-                                                dateFa(
-                                                    movement.movement_date
-                                                ) || "-"
-                                            }
-
-                                        </div>
-
-
-                                        ${
-                                            movement.description
-                                                ?
-                                                `
-                                                    <div
-                                                        style="
-                                                            margin-top:8px
-                                                        "
-                                                        class="muted"
-                                                    >
-
-                                                        📝
-                                                        ${
-                                                            esc(
-                                                                movement.description
-                                                            )
-                                                        }
-
-                                                    </div>
-                                                `
-                                                :
-                                                ""
-                                        }
-
-                                    </div>
-
-                                </details>
-
-                            `;
-
-                        }
-                    )
-                    .join("");
-
-        }
-
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "INVENTORY ERROR:",
-            error
-        );
-
-
-        projectsBox.innerHTML = `
-            <div class="notice error-box">
-
-                ❌ خطا در دریافت موجودی انبار
-
-                <br><br>
-
-                <small>
-                    ${esc(
-                        error?.message ||
-                        String(error)
-                    )}
-                </small>
-
-            </div>
-        `;
-
-
-        movementsBox.innerHTML = "";
-
-    }
+  }
 
 }
     
