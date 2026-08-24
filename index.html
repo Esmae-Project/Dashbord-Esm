@@ -3552,8 +3552,6 @@ async function loadInventory() {
   }
 }
 
-
-
 async function loadPersonalAccounts() {
 
   const table =
@@ -3569,7 +3567,6 @@ async function loadPersonalAccounts() {
     return;
   }
 
-
   table.innerHTML = `
     <tr>
       <td colspan="6" style="text-align:center">
@@ -3577,7 +3574,6 @@ async function loadPersonalAccounts() {
       </td>
     </tr>
   `;
-
 
   try {
 
@@ -3588,7 +3584,6 @@ async function loadPersonalAccounts() {
         ascending: false
       });
 
-
     if (error) {
       console.error(
         "Supabase personal_accounts error:",
@@ -3598,12 +3593,10 @@ async function loadPersonalAccounts() {
       throw error;
     }
 
-
     console.log(
       "Personal accounts:",
       data
     );
-
 
     if (!data || data.length === 0) {
 
@@ -3625,10 +3618,8 @@ async function loadPersonalAccounts() {
       return;
     }
 
-
     let totalDebt = 0;
     let totalCredit = 0;
-
 
     const formatMoney = value => {
 
@@ -3639,7 +3630,6 @@ async function loadPersonalAccounts() {
       );
 
     };
-
 
     const formatDate = value => {
 
@@ -3659,6 +3649,9 @@ async function loadPersonalAccounts() {
 
     };
 
+    /* =========================
+       محاسبه خلاصه
+       ========================= */
 
     data.forEach(item => {
 
@@ -3674,18 +3667,29 @@ async function loadPersonalAccounts() {
           0
         );
 
-
       const type =
         String(
           item.account_type || ""
         ).toLowerCase();
 
+      const isSalary =
+        type === "salary" ||
+        type.includes("salary") ||
+        type.includes("حقوق");
 
       const isDebt =
         type === "debt" ||
         type.includes("debt") ||
         type.includes("owe");
 
+      /*
+       * حقوق دریافتی جزو طلب یا بدهی نیست
+       */
+      if (isSalary) {
+
+        return;
+
+      }
 
       if (isDebt) {
 
@@ -3698,7 +3702,6 @@ async function loadPersonalAccounts() {
       }
 
     });
-
 
     /* =========================
        خلاصه
@@ -3726,7 +3729,6 @@ async function loadPersonalAccounts() {
 
         </div>
 
-
         <div class="card">
 
           <div class="muted">
@@ -3749,7 +3751,6 @@ async function loadPersonalAccounts() {
 
     }
 
-
     /* =========================
        جدول
        ========================= */
@@ -3768,23 +3769,43 @@ async function loadPersonalAccounts() {
           0
         );
 
-
       const type =
         String(
           item.account_type || ""
         ).toLowerCase();
 
+      const isSalary =
+        type === "salary" ||
+        type.includes("salary") ||
+        type.includes("حقوق");
 
       const isDebt =
         type === "debt" ||
         type.includes("debt") ||
         type.includes("owe");
 
-
       const personName =
         item.person_name ||
         "بدون نام";
 
+      /* =========================
+         نوع نمایش
+         ========================= */
+
+      let accountLabel = "💰 طلبکارم";
+      let amountClass = "success";
+
+      if (isSalary) {
+
+        accountLabel = "💵 حقوق دریافتی";
+        amountClass = "success";
+
+      } else if (isDebt) {
+
+        accountLabel = "💸 بدهکارم";
+        amountClass = "danger";
+
+      }
 
       return `
 
@@ -3798,21 +3819,15 @@ async function loadPersonalAccounts() {
 
           </td>
 
-
           <td>
 
             <span class="pill">
 
-              ${
-                isDebt
-                  ? "💸 بدهکارم"
-                  : "💰 طلبکارم"
-              }
+              ${accountLabel}
 
             </span>
 
           </td>
-
 
           <td>
 
@@ -3820,22 +3835,16 @@ async function loadPersonalAccounts() {
 
           </td>
 
-
           <td>
 
             ${formatMoney(paid)}
 
           </td>
 
-
           <td>
 
             <b
-              class="${
-                isDebt
-                  ? "danger"
-                  : "success"
-              }"
+              class="${amountClass}"
             >
 
               ${formatMoney(remaining)}
@@ -3843,7 +3852,6 @@ async function loadPersonalAccounts() {
             </b>
 
           </td>
-
 
           <td>
 
@@ -3859,14 +3867,12 @@ async function loadPersonalAccounts() {
 
     }).join("");
 
-
   } catch (error) {
 
     console.error(
       "PERSONAL ACCOUNTS ERROR:",
       error
     );
-
 
     table.innerHTML = `
 
@@ -3903,6 +3909,8 @@ async function loadPersonalAccounts() {
   }
 
 }
+
+
 
 async function loadPersonalExpenses() {
   const table =
