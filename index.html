@@ -404,7 +404,60 @@ footer{
     }
 
 }
-    
+    .latest-record{
+    border:1px solid #e5e7eb;
+    border-radius:14px;
+    padding:13px;
+    margin-top:9px;
+    background:#f9fafb;
+}
+
+.latest-record-main{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+}
+
+.latest-record-title{
+    font-weight:800;
+}
+
+.latest-record-meta{
+    margin-top:7px;
+    color:#6b7280;
+    font-size:12px;
+    line-height:1.8;
+}
+
+.latest-record-amount{
+    font-weight:800;
+    white-space:nowrap;
+}
+
+.latest-work{
+    border-right:4px solid #16a34a;
+}
+
+.latest-payment{
+    border-right:4px solid #2563eb;
+}
+
+.latest-purchase{
+    border-right:4px solid #f59e0b;
+}
+
+.latest-personal{
+    border-right:4px solid #8b5cf6;
+}
+
+.latest-expense{
+    border-right:4px solid #ec4899;
+}
+
+.latest-worker{
+    border-right:4px solid #06b6d4;
+}
 </style>
 </head>
 
@@ -439,6 +492,39 @@ footer{
 <section id="dashboard" class="view active">
 
     <div id="stats" class="grid"></div>
+    <div class="section">
+    <div class="card">
+
+        <div class="row">
+            <div>
+                <h2 style="margin:0">
+                    🕘 آخرین ثبت‌ها
+                </h2>
+
+                <p class="muted" style="margin-bottom:0">
+                    آخرین فعالیت‌های ثبت‌شده در سیستم
+                </p>
+            </div>
+
+            <button
+                class="btn light"
+                onclick="loadLatestRecords()"
+            >
+                🔄
+            </button>
+        </div>
+
+        <div
+            id="latestRecords"
+            style="margin-top:12px"
+        >
+            <div class="empty">
+                ⏳ در حال دریافت آخرین ثبت‌ها...
+            </div>
+        </div>
+
+    </div>
+</div>
 
     <div class="section">
         <h2>👷 پیمانکاران</h2>
@@ -3990,6 +4076,565 @@ async function loadPersonalExpenses() {
     `;
   }
 }
+
+async function loadLatestRecords(){
+
+    const box =
+        document.getElementById("latestRecords");
+
+    if(!box) return;
+
+    box.innerHTML = `
+        <div class="empty">
+            ⏳ در حال دریافت آخرین ثبت‌ها...
+        </div>
+    `;
+
+    try{
+
+        if(!sb){
+            throw new Error(
+                "اتصال به Supabase برقرار نیست."
+            );
+        }
+
+        const [
+            transactionsRes,
+            purchasesRes,
+            workerRes,
+            personalAccountsRes,
+            personalExpensesRes
+        ] = await Promise.all([
+
+            sb
+                .from("transactions")
+                .select(`
+                    id,
+                    contractor_id,
+                    project_id,
+                    type,
+                    description,
+                    amount_toman,
+                    transaction_date,
+                    status,
+                    created_at
+                `)
+                .order("created_at", {
+                    ascending:false
+                })
+                .limit(10),
+
+            sb
+                .from("purchases")
+                .select(`
+                    id,
+                    item_name,
+                    quantity,
+                    unit,
+                    amount_toman,
+                    purchase_date,
+                    project_id,
+                    description,
+                    created_at
+                `)
+                .order("created_at", {
+                    ascending:false
+                })
+                .limit(10),
+
+            sb
+                .from("worker_activities")
+                .select(`
+                    id,
+                    person_name,
+                    activity_date,
+                    hours,
+                    description,
+                    project_id,
+                    created_at
+                `)
+                .order("created_at", {
+                    ascending:false
+                })
+                .limit(10),
+
+            sb
+                .from("personal_accounts")
+                .select("*")
+                .order("created_at", {
+                    ascending:false
+                })
+                .limit(10),
+
+            sb
+                .from("personal_expenses")
+                .select(`
+                    id,
+                    item_name,
+                    category,
+                    amount_toman,
+                    expense_date,
+                    description,
+                    created_at
+                `)
+                .order("created_at", {
+                    ascending:false
+                })
+                .limit(10)
+
+        ]);
+
+
+        if(transactionsRes.error)
+            throw transactionsRes.error;
+
+        if(purchasesRes.error)
+            throw purchasesRes.error;
+
+        if(workerRes.error)
+            throw workerRes.error;
+
+        if(personalAccountsRes.error)
+            throw personalAccountsRes.error;
+
+        if(personalExpensesRes.error)
+            throw personalExpensesRes.error;
+
+
+        const contractors =
+            Object.fromEntries(
+                Object.entries(
+                    db.contractors || {}
+                ).map(
+                    ([name,data]) =>
+                        [data.id,name]
+                )
+            );
+
+
+        const projects =
+            Object.fromEntries(
+                Object.entries(
+                    db.projects || {}
+                ).map(
+                    ([name,data]) =>
+                        [data.id,name]
+                )
+            );
+
+
+        const records = [];
+
+
+        /* =========================
+           تراکنش‌ها
+        ========================= */
+
+        (transactionsRes.data || [])
+            .forEach(item => {
+
+                if(
+                    item.status === "replaced"
+                ) return;
+
+                const isPayment =
+                    item.type === "payment";
+
+                records.push({
+
+                    date:
+                        item.created_at,
+
+                    type:
+                        isPayment
+                            ? "payment"
+                            : "work",
+
+                    icon:
+                        isPayment
+                            ? "💰"
+                            : "🟢",
+
+                    title:
+                        isPayment
+                            ? "پرداخت"
+                            : "کار انجام‌شده",
+
+                    person:
+                        contractors[
+                            item.contractor_id
+                        ] || "نامشخص",
+
+                    project:
+                        projects[
+                            item.project_id
+                        ] || "نامشخص",
+
+                    description:
+                        item.description || "",
+
+                    amount:
+                        Number(
+                            item.amount_toman || 0
+                        )
+
+                });
+
+            });
+
+
+        /* =========================
+           خریدها
+        ========================= */
+
+        (purchasesRes.data || [])
+            .forEach(item => {
+
+                records.push({
+
+                    date:
+                        item.created_at ||
+                        item.purchase_date,
+
+                    type:
+                        "purchase",
+
+                    icon:
+                        "🛒",
+
+                    title:
+                        "خرید",
+
+                    person:
+                        "",
+
+                    project:
+                        projects[
+                            item.project_id
+                        ] || "نامشخص",
+
+                    description:
+                        item.item_name || "",
+
+                    amount:
+                        Number(
+                            item.amount_toman || 0
+                        )
+
+                });
+
+            });
+
+
+        /* =========================
+           فعالیت نیرو
+        ========================= */
+
+        (workerRes.data || [])
+            .forEach(item => {
+
+                records.push({
+
+                    date:
+                        item.created_at ||
+                        item.activity_date,
+
+                    type:
+                        "worker",
+
+                    icon:
+                        "👷",
+
+                    title:
+                        "فعالیت نیرو",
+
+                    person:
+                        item.person_name ||
+                        "نامشخص",
+
+                    project:
+                        projects[
+                            item.project_id
+                        ] || "نامشخص",
+
+                    description:
+                        item.description ||
+                        `${item.hours || 0} ساعت`,
+
+                    amount:
+                        null
+
+                });
+
+            });
+
+
+        /* =========================
+           حساب شخصی
+        ========================= */
+
+        (personalAccountsRes.data || [])
+            .forEach(item => {
+
+                records.push({
+
+                    date:
+                        item.created_at ||
+                        item.account_date,
+
+                    type:
+                        "personal",
+
+                    icon:
+                        "👤",
+
+                    title:
+                        "حساب شخصی",
+
+                    person:
+                        item.person_name ||
+                        "نامشخص",
+
+                    project:
+                        "",
+
+                    description:
+                        item.account_type ||
+                        "",
+
+                    amount:
+                        Number(
+                            item.amount_toman || 0
+                        )
+
+                });
+
+            });
+
+
+        /* =========================
+           هزینه شخصی
+        ========================= */
+
+        (personalExpensesRes.data || [])
+            .forEach(item => {
+
+                records.push({
+
+                    date:
+                        item.created_at ||
+                        item.expense_date,
+
+                    type:
+                        "expense",
+
+                    icon:
+                        "🛍️",
+
+                    title:
+                        "هزینه شخصی",
+
+                    person:
+                        "",
+
+                    project:
+                        "",
+
+                    description:
+                        item.item_name ||
+                        "",
+
+                    amount:
+                        Number(
+                            item.amount_toman || 0
+                        )
+
+                });
+
+            });
+
+
+        /* =========================
+           مرتب‌سازی
+        ========================= */
+
+        records.sort(
+            (a,b) =>
+                new Date(b.date || 0) -
+                new Date(a.date || 0)
+        );
+
+
+        const latest =
+            records.slice(0,10);
+
+
+        if(!latest.length){
+
+            box.innerHTML = `
+                <div class="empty">
+                    📭 هنوز ثبتی وجود ندارد.
+                </div>
+            `;
+
+            return;
+
+        }
+
+
+        /* =========================
+           خروجی
+        ========================= */
+
+        box.innerHTML =
+            latest.map(item => {
+
+                const date =
+                    item.date
+                        ? new Date(
+                            item.date
+                          ).toLocaleDateString(
+                            "fa-IR"
+                          )
+                        : "-";
+
+
+                return `
+
+                    <details
+                        class="
+                            latest-record
+                            latest-${item.type}
+                        "
+                    >
+
+                        <summary>
+
+                            <div
+                                class="
+                                    latest-record-main
+                                "
+                            >
+
+                                <span
+                                    class="
+                                        latest-record-title
+                                    "
+                                >
+                                    ${item.icon}
+                                    ${esc(item.title)}
+                                </span>
+
+                                ${
+                                    item.amount !== null
+                                    ?
+                                    `
+                                    <span
+                                        class="
+                                            latest-record-amount
+                                        "
+                                    >
+                                        ${money(item.amount)}
+                                    </span>
+                                    `
+                                    :
+                                    ""
+                                }
+
+                            </div>
+
+                        </summary>
+
+
+                        <div
+                            class="
+                                latest-record-meta
+                            "
+                        >
+
+                            ${
+                                item.person
+                                ?
+                                `
+                                👤
+                                ${esc(item.person)}
+                                <br>
+                                `
+                                :
+                                ""
+                            }
+
+
+                            ${
+                                item.project
+                                ?
+                                `
+                                🏗️ پروژه:
+                                ${esc(item.project)}
+                                <br>
+                                `
+                                :
+                                ""
+                            }
+
+
+                            ${
+                                item.description
+                                ?
+                                `
+                                📝
+                                ${esc(item.description)}
+                                <br>
+                                `
+                                :
+                                ""
+                            }
+
+
+                            📅 ${date}
+
+                        </div>
+
+                    </details>
+
+                `;
+
+            }).join("");
+
+
+    }
+
+    catch(error){
+
+        console.error(
+            "LATEST RECORDS ERROR:",
+            error
+        );
+
+
+        box.innerHTML = `
+
+            <div class="notice error-box">
+
+                ❌ خطا در دریافت آخرین ثبت‌ها
+
+                <br><br>
+
+                <small>
+                    ${esc(
+                        error?.message ||
+                        String(error)
+                    )}
+                </small>
+
+            </div>
+
+        `;
+
+    }
+
+}
+
     
 /* =====================================================
    START
@@ -4025,6 +4670,10 @@ setTimeout(() => {
 setTimeout(() => {
     loadInventory();
 }, 1500);
+
+setTimeout(() => {
+    loadLatestRecords();
+}, 1200);
     
 </script>
 
