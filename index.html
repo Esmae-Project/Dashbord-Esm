@@ -3418,6 +3418,297 @@ async function loadInventory() {
 
 }
     
+async function loadPurchases() {
+
+  const box = document.getElementById("purchasesList");
+
+  if (!box) return;
+
+  box.innerHTML = `
+    <div class="empty">
+      ⏳ در حال دریافت خریدها...
+    </div>
+  `;
+
+  try {
+
+    const { data, error } = await sb
+      .from("purchases")
+      .select(`
+        id,
+        item_name,
+        quantity,
+        unit,
+        amount_toman,
+        purchase_date,
+        project_id,
+        description
+      `)
+      .order("purchase_date", {
+        ascending: false
+      });
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+
+      box.innerHTML = `
+        <div class="empty">
+          🛒 هنوز خریدی ثبت نشده.
+        </div>
+      `;
+
+      return;
+    }
+
+
+    /* ==========================================
+       گروه‌بندی خریدها بر اساس تاریخ
+    ========================================== */
+
+    const groups = {};
+
+    data.forEach(purchase => {
+
+      const date =
+        purchase.purchase_date || "بدون تاریخ";
+
+      if (!groups[date]) {
+        groups[date] = [];
+      }
+
+      groups[date].push(purchase);
+
+    });
+
+
+    /* ==========================================
+       مرتب‌سازی تاریخ‌ها از جدید به قدیم
+    ========================================== */
+
+    const sortedDates =
+      Object.keys(groups).sort(
+        (a, b) => {
+
+          if (a === "بدون تاریخ") return 1;
+          if (b === "بدون تاریخ") return -1;
+
+          return (
+            new Date(b).getTime() -
+            new Date(a).getTime()
+          );
+
+        }
+      );
+
+
+    /* ==========================================
+       نمایش آکاردئونی
+    ========================================== */
+
+    box.innerHTML =
+      sortedDates.map(date => {
+
+        const purchases =
+          groups[date];
+
+        const total =
+          purchases.reduce(
+            (sum, item) =>
+              sum +
+              Number(
+                item.amount_toman || 0
+              ),
+            0
+          );
+
+
+        const totalFormatted =
+          Number(total)
+            .toLocaleString("fa-IR")
+            + " ریال";
+
+
+        const dateFormatted =
+          date === "بدون تاریخ"
+            ? "بدون تاریخ"
+            : dateFa(date);
+
+
+        return `
+
+          <details
+            class="accounting-accordion"
+          >
+
+            <summary>
+
+              <span>
+                📅 ${dateFormatted}
+              </span>
+
+              <span
+                class="pill"
+              >
+                ${purchases.length} خرید
+              </span>
+
+            </summary>
+
+
+            <div
+              class="accordion-content"
+            >
+
+              <div
+                class="notice success-box"
+                style="margin-bottom:12px"
+              >
+
+                💰 مجموع خریدهای این تاریخ:
+
+                <b>
+                  ${totalFormatted}
+                </b>
+
+              </div>
+
+
+              ${purchases.map(purchase => {
+
+                const amount =
+                  Number(
+                    purchase.amount_toman || 0
+                  );
+
+
+                return `
+
+                  <div
+                    class="latest-record
+                           latest-purchase"
+                  >
+
+                    <div
+                      class="latest-record-main"
+                    >
+
+                      <div>
+
+                        <div
+                          class="latest-record-title"
+                        >
+                          🛒
+                          ${esc(
+                            purchase.item_name ||
+                            "بدون نام"
+                          )}
+                        </div>
+
+
+                        <div
+                          class="latest-record-meta"
+                        >
+
+                          📦 مقدار:
+
+                          <b>
+                            ${esc(
+                              String(
+                                purchase.quantity ??
+                                "-"
+                              )
+                            )}
+                          </b>
+
+                          ${esc(
+                            purchase.unit ||
+                            ""
+                          )}
+
+                          <br>
+
+                          💰 مبلغ:
+
+                          <b>
+                            ${
+                              amount
+                                .toLocaleString(
+                                  "fa-IR"
+                                )
+                            }
+                            ریال
+                          </b>
+
+                          ${
+                            purchase.description
+                              ? `
+                                <br>
+                                📝 توضیحات:
+
+                                ${esc(
+                                  purchase.description
+                                )}
+                              `
+                              : ""
+                          }
+
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                `;
+
+              }).join("")}
+
+            </div>
+
+          </details>
+
+        `;
+
+      }).join("");
+
+
+  } catch (error) {
+
+    console.error(
+      "PURCHASES ERROR:",
+      error
+    );
+
+
+    box.innerHTML = `
+
+      <div
+        class="notice error-box"
+      >
+
+        ❌ خطا در دریافت خریدها
+
+        <br><br>
+
+        <small>
+
+          ${
+            error?.message ||
+            String(error)
+          }
+
+        </small>
+
+      </div>
+
+    `;
+
+  }
+
+}
+
 
 
 async function loadPersonalAccounts() {
