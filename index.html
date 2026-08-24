@@ -1157,7 +1157,7 @@ function money(number){
         "fa-IR"
     ).format(
         Number(number)||0
-    ) + " تومان";
+    ) + " ریال";
 
 }
 
@@ -3523,7 +3523,7 @@ async function loadInventory() {
               font-size:18px;
               font-weight:700;
             ">
-              💰 ${amount} تومان
+              💰 ${amount} ریال
             </div>
 
           </div>
@@ -3626,7 +3626,7 @@ async function loadPersonalAccounts() {
       return (
         Number(value || 0)
           .toLocaleString("fa-IR")
-        + " تومان"
+        + " ریال"
       );
 
     };
@@ -3969,7 +3969,7 @@ async function loadPersonalExpenses() {
     const formatMoney = value => {
       return (
         Number(value || 0).toLocaleString("fa-IR")
-        + " تومان"
+        + " ریال"
       );
     };
     const formatDate = value => {
