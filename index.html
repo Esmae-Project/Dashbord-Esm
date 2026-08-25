@@ -4260,27 +4260,21 @@ async function loadPersonalExpenses() {
   }
 }
 
-async function loadLatestRecords(){
-
+async function loadLatestRecords() {
     const box =
         document.getElementById("latestRecords");
-
-    if(!box) return;
-
+    if (!box) return;
     box.innerHTML = `
         <div class="empty">
             ⏳ در حال دریافت آخرین ثبت‌ها...
         </div>
     `;
-
-    try{
-
-        if(!sb){
+    try {
+        if (!sb) {
             throw new Error(
                 "اتصال به Supabase برقرار نیست."
             );
         }
-
         const [
             transactionsRes,
             purchasesRes,
@@ -4288,7 +4282,6 @@ async function loadLatestRecords(){
             personalAccountsRes,
             personalExpensesRes
         ] = await Promise.all([
-
             sb
                 .from("transactions")
                 .select(`
@@ -4303,10 +4296,9 @@ async function loadLatestRecords(){
                     created_at
                 `)
                 .order("created_at", {
-                    ascending:false
+                    ascending: false
                 })
                 .limit(10),
-
             sb
                 .from("purchases")
                 .select(`
@@ -4321,10 +4313,9 @@ async function loadLatestRecords(){
                     created_at
                 `)
                 .order("created_at", {
-                    ascending:false
+                    ascending: false
                 })
                 .limit(10),
-
             sb
                 .from("worker_activities")
                 .select(`
@@ -4337,18 +4328,16 @@ async function loadLatestRecords(){
                     created_at
                 `)
                 .order("created_at", {
-                    ascending:false
+                    ascending: false
                 })
                 .limit(10),
-
             sb
                 .from("personal_accounts")
                 .select("*")
                 .order("created_at", {
-                    ascending:false
+                    ascending: false
                 })
                 .limit(10),
-
             sb
                 .from("personal_expenses")
                 .select(`
@@ -4361,344 +4350,250 @@ async function loadLatestRecords(){
                     created_at
                 `)
                 .order("created_at", {
-                    ascending:false
+                    ascending: false
                 })
                 .limit(10)
-
         ]);
-
-
-        if(transactionsRes.error)
+        if (transactionsRes.error)
             throw transactionsRes.error;
-
-        if(purchasesRes.error)
+        if (purchasesRes.error)
             throw purchasesRes.error;
-
-        if(workerRes.error)
+        if (workerRes.error)
             throw workerRes.error;
-
-        if(personalAccountsRes.error)
+        if (personalAccountsRes.error)
             throw personalAccountsRes.error;
-
-        if(personalExpensesRes.error)
+        if (personalExpensesRes.error)
             throw personalExpensesRes.error;
-
-
         const contractors =
             Object.fromEntries(
                 Object.entries(
                     db.contractors || {}
                 ).map(
-                    ([name,data]) =>
-                        [data.id,name]
+                    ([name, data]) =>
+                        [data.id, name]
                 )
             );
-
-
         const projects =
             Object.fromEntries(
                 Object.entries(
                     db.projects || {}
                 ).map(
-                    ([name,data]) =>
-                        [data.id,name]
+                    ([name, data]) =>
+                        [data.id, name]
                 )
             );
-
-
         const records = [];
-
-
         /* =========================
            تراکنش‌ها
         ========================= */
-
         (transactionsRes.data || [])
             .forEach(item => {
-
-                if(
+                if (
                     item.status === "replaced"
                 ) return;
-
                 const isPayment =
                     item.type === "payment";
-
                 records.push({
-
                     date:
                         item.created_at,
-
                     type:
                         isPayment
                             ? "payment"
                             : "work",
-
                     icon:
                         isPayment
                             ? "💰"
                             : "🟢",
-
                     title:
                         isPayment
                             ? "پرداخت"
                             : "کار انجام‌شده",
-
                     person:
                         contractors[
                             item.contractor_id
                         ] || "نامشخص",
-
                     project:
                         projects[
                             item.project_id
                         ] || "نامشخص",
-
                     description:
                         item.description || "",
-
+                    /*
+                     * amount_toman در دیتابیس
+                     * بر اساس تومان ذخیره شده.
+                     *
+                     * نمایش در سایت = ریال
+                     * تومان × ۱۰ = ریال
+                     */
                     amount:
                         Number(
                             item.amount_toman || 0
-                        )
-
+                        ) * 10
                 });
-
             });
-
-
         /* =========================
            خریدها
         ========================= */
-
         (purchasesRes.data || [])
             .forEach(item => {
-
                 records.push({
-
                     date:
                         item.created_at ||
                         item.purchase_date,
-
                     type:
                         "purchase",
-
                     icon:
                         "🛒",
-
                     title:
                         "خرید",
-
                     person:
                         "",
-
                     project:
                         projects[
                             item.project_id
                         ] || "نامشخص",
-
                     description:
                         item.item_name || "",
-
+                    /*
+                     * مبلغ ذخیره‌شده = تومان
+                     * مبلغ نمایش داده‌شده = ریال
+                     */
                     amount:
                         Number(
                             item.amount_toman || 0
-                        )
-
+                        ) * 10
                 });
-
             });
-
-
         /* =========================
            فعالیت نیرو
         ========================= */
-
         (workerRes.data || [])
             .forEach(item => {
-
                 records.push({
-
                     date:
                         item.created_at ||
                         item.activity_date,
-
                     type:
                         "worker",
-
                     icon:
                         "👷",
-
                     title:
                         "فعالیت نیرو",
-
                     person:
                         item.person_name ||
                         "نامشخص",
-
                     project:
                         projects[
                             item.project_id
                         ] || "نامشخص",
-
                     description:
                         item.description ||
                         `${item.hours || 0} ساعت`,
-
                     amount:
                         null
-
                 });
-
             });
-
-
         /* =========================
            حساب شخصی
         ========================= */
-
         (personalAccountsRes.data || [])
             .forEach(item => {
-
                 records.push({
-
                     date:
                         item.created_at ||
                         item.account_date,
-
                     type:
                         "personal",
-
                     icon:
                         "👤",
-
                     title:
                         "حساب شخصی",
-
                     person:
                         item.person_name ||
                         "نامشخص",
-
                     project:
                         "",
-
                     description:
                         item.account_type ||
                         "",
-
                     amount:
                         Number(
                             item.amount_toman || 0
-                        )
-
+                        ) * 10
                 });
-
             });
-
-
         /* =========================
            هزینه شخصی
         ========================= */
-
         (personalExpensesRes.data || [])
             .forEach(item => {
-
                 records.push({
-
                     date:
                         item.created_at ||
                         item.expense_date,
-
                     type:
                         "expense",
-
                     icon:
                         "🛍️",
-
                     title:
                         "هزینه شخصی",
-
                     person:
                         "",
-
                     project:
                         "",
-
                     description:
                         item.item_name ||
                         "",
-
                     amount:
                         Number(
                             item.amount_toman || 0
-                        )
-
+                        ) * 10
                 });
-
             });
-
-
         /* =========================
            مرتب‌سازی
         ========================= */
-
         records.sort(
-            (a,b) =>
+            (a, b) =>
                 new Date(b.date || 0) -
                 new Date(a.date || 0)
         );
-
-
         const latest =
-            records.slice(0,10);
-
-
-        if(!latest.length){
-
+            records.slice(0, 10);
+        if (!latest.length) {
             box.innerHTML = `
                 <div class="empty">
                     📭 هنوز ثبتی وجود ندارد.
                 </div>
             `;
-
             return;
-
         }
-
-
         /* =========================
            خروجی
         ========================= */
-
         box.innerHTML =
             latest.map(item => {
-
                 const date =
                     item.date
                         ? new Date(
                             item.date
-                          ).toLocaleDateString(
+                        ).toLocaleDateString(
                             "fa-IR"
-                          )
+                        )
                         : "-";
-
-
                 return `
-
                     <details
                         class="
                             latest-record
                             latest-${item.type}
                         "
                     >
-
                         <summary>
-
                             <div
                                 class="
                                     latest-record-main
                                 "
                             >
-
                                 <span
                                     class="
                                         latest-record-title
@@ -4707,7 +4602,6 @@ async function loadLatestRecords(){
                                     ${item.icon}
                                     ${esc(item.title)}
                                 </span>
-
                                 ${
                                     item.amount !== null
                                     ?
@@ -4717,24 +4611,24 @@ async function loadLatestRecords(){
                                             latest-record-amount
                                         "
                                     >
-                                        ${money(item.amount)}
+                                        ${Number(
+                                            item.amount || 0
+                                        ).toLocaleString(
+                                            "fa-IR"
+                                        )}
+                                        ریال
                                     </span>
                                     `
                                     :
                                     ""
                                 }
-
                             </div>
-
                         </summary>
-
-
                         <div
                             class="
                                 latest-record-meta
                             "
                         >
-
                             ${
                                 item.person
                                 ?
@@ -4746,8 +4640,6 @@ async function loadLatestRecords(){
                                 :
                                 ""
                             }
-
-
                             ${
                                 item.project
                                 ?
@@ -4759,8 +4651,6 @@ async function loadLatestRecords(){
                                 :
                                 ""
                             }
-
-
                             ${
                                 item.description
                                 ?
@@ -4772,50 +4662,35 @@ async function loadLatestRecords(){
                                 :
                                 ""
                             }
-
-
                             📅 ${date}
-
                         </div>
-
                     </details>
-
                 `;
-
             }).join("");
-
-
     }
-
-    catch(error){
-
+    catch (error) {
         console.error(
             "LATEST RECORDS ERROR:",
             error
         );
-
-
         box.innerHTML = `
-
-            <div class="notice error-box">
-
+            <div
+                class="
+                    notice
+                    error-box
+                "
+            >
                 ❌ خطا در دریافت آخرین ثبت‌ها
-
                 <br><br>
-
                 <small>
                     ${esc(
                         error?.message ||
                         String(error)
                     )}
                 </small>
-
             </div>
-
         `;
-
     }
-
 }
 
     
