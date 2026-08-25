@@ -3461,10 +3461,9 @@ async function loadPurchases() {
       return;
     }
 
-
-    /* ==========================================
-       گروه‌بندی خریدها بر اساس تاریخ
-    ========================================== */
+    /* ================================
+       گروه‌بندی بر اساس تاریخ
+    ================================= */
 
     const groups = {};
 
@@ -3482,29 +3481,27 @@ async function loadPurchases() {
     });
 
 
-    /* ==========================================
-       مرتب‌سازی تاریخ‌ها از جدید به قدیم
-    ========================================== */
+    /* ================================
+       مرتب‌سازی تاریخ
+    ================================= */
 
     const sortedDates =
-      Object.keys(groups).sort(
-        (a, b) => {
+      Object.keys(groups).sort((a, b) => {
 
-          if (a === "بدون تاریخ") return 1;
-          if (b === "بدون تاریخ") return -1;
+        if (a === "بدون تاریخ") return 1;
+        if (b === "بدون تاریخ") return -1;
 
-          return (
-            new Date(b).getTime() -
-            new Date(a).getTime()
-          );
+        return (
+          new Date(b).getTime() -
+          new Date(a).getTime()
+        );
 
-        }
-      );
+      });
 
 
-    /* ==========================================
-       نمایش آکاردئونی
-    ========================================== */
+    /* ================================
+       نمایش
+    ================================= */
 
     box.innerHTML =
       sortedDates.map(date => {
@@ -3512,21 +3509,32 @@ async function loadPurchases() {
         const purchases =
           groups[date];
 
-        const total =
+
+        /*
+         * مقدار amount_toman در دیتابیس
+         * هنوز بر اساس تومان ذخیره شده.
+         *
+         * بنابراین فقط برای نمایش:
+         *
+         * تومان × ۱۰ = ریال
+         */
+
+        const totalRial =
           purchases.reduce(
             (sum, item) =>
               sum +
-              Number(
-                item.amount_toman || 0
+              (
+                Number(
+                  item.amount_toman || 0
+                ) * 10
               ),
             0
           );
 
 
         const totalFormatted =
-          Number(total)
-            .toLocaleString("fa-IR")
-            + " ریال";
+          totalRial.toLocaleString("fa-IR")
+          + " ریال";
 
 
         const dateFormatted =
@@ -3547,9 +3555,7 @@ async function loadPurchases() {
                 📅 ${dateFormatted}
               </span>
 
-              <span
-                class="pill"
-              >
+              <span class="pill">
                 ${purchases.length} خرید
               </span>
 
@@ -3576,17 +3582,21 @@ async function loadPurchases() {
 
               ${purchases.map(purchase => {
 
-                const amount =
+                /*
+                 * مبلغ ذخیره‌شده = تومان
+                 * مبلغ نمایش داده‌شده = ریال
+                 */
+
+                const amountRial =
                   Number(
                     purchase.amount_toman || 0
-                  );
+                  ) * 10;
 
 
                 return `
 
                   <div
-                    class="latest-record
-                           latest-purchase"
+                    class="latest-record latest-purchase"
                   >
 
                     <div
@@ -3598,11 +3608,13 @@ async function loadPurchases() {
                         <div
                           class="latest-record-title"
                         >
+
                           🛒
                           ${esc(
                             purchase.item_name ||
                             "بدون نام"
                           )}
+
                         </div>
 
 
@@ -3628,27 +3640,31 @@ async function loadPurchases() {
 
                           <br>
 
+
                           💰 مبلغ:
 
                           <b>
                             ${
-                              amount
-                                .toLocaleString(
-                                  "fa-IR"
-                                )
+                              amountRial.toLocaleString(
+                                "fa-IR"
+                              )
                             }
                             ریال
                           </b>
 
+
                           ${
                             purchase.description
                               ? `
+
                                 <br>
+
                                 📝 توضیحات:
 
                                 ${esc(
                                   purchase.description
                                 )}
+
                               `
                               : ""
                           }
