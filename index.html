@@ -2669,19 +2669,23 @@ document
         }
     );
 async function loadWorkerActivities() {
-
-  const box = document.getElementById("workerActivitiesList");
-
+  const box =
+    document.getElementById("workerActivitiesList");
   if (!box) return;
-
   box.innerHTML = `
     <div class="empty">
       ⏳ در حال دریافت فعالیت‌ها...
     </div>
   `;
-
   try {
-
+    if (!sb) {
+      throw new Error(
+        "اتصال به Supabase برقرار نیست."
+      );
+    }
+    /* ==========================================
+       دریافت مستقیم از Supabase
+    ========================================== */
     const { data, error } = await sb
       .from("worker_activities")
       .select(`
@@ -2693,377 +2697,313 @@ async function loadWorkerActivities() {
         project_id,
         created_at
       `)
-      .order("activity_date", { ascending: false })
-      .order("created_at", { ascending: false });
-
-    if (error) throw error;
-
-
-    /* ==========================================
-       ساخت لیست پروژه‌ها
-    ========================================== */
-
-    const projects = {};
-
-    Object.entries(db.projects || {}).forEach(
-      ([name, project]) => {
-
-        if (project && project.id) {
-          projects[project.id] = name;
-        }
-
-      }
-    );
-
-
+      .order("activity_date", {
+        ascending: false
+      })
+      .order("created_at", {
+        ascending: false
+      });
+    if (error) {
+      throw error;
+    }
     /* ==========================================
        بدون فعالیت
     ========================================== */
-
     if (!data || data.length === 0) {
-
       box.innerHTML = `
         <div class="empty">
           👷 هنوز فعالیتی ثبت نشده.
         </div>
       `;
-
       return;
     }
-
-
     /* ==========================================
-       گروه‌بندی بر اساس تاریخ
+       نام پروژه‌ها
     ========================================== */
-
+    const projects = {};
+    Object.entries(db.projects || {})
+      .forEach(([name, project]) => {
+        if (project && project.id) {
+          projects[String(project.id)] =
+            name;
+        }
+      });
+    /* ==========================================
+       تبدیل تاریخ دیتابیس به شمسی
+    ========================================== */
+    function formatWorkerDate(dateString) {
+      if (!dateString) return "-";
+      const value =
+        String(dateString)
+          .slice(0, 10);
+      const parts =
+        value.split("-");
+      if (parts.length !== 3) {
+        return value;
+      }
+      const year =
+        Number(parts[0]);
+      const month =
+        Number(parts[1]);
+      const day =
+        Number(parts[2]);
+      if (
+        !Number.isInteger(year) ||
+        !Number.isInteger(month) ||
+        !Number.isInteger(day)
+      ) {
+        return value;
+      }
+      /*
+       * استفاده از تقویم فارسی به صورت صریح
+       * تا timezone یا locale باعث تغییر روز نشود.
+       */
+      return new Intl.DateTimeFormat(
+        "fa-IR-u-ca-persian-nu-arabext",
+        {
+          year: "numeric",
+          month: "long",
+          day: "numeric"
+        }
+      ).format(
+        new Date(
+          Date.UTC(
+            year,
+            month - 1,
+            day,
+            12,
+            0,
+            0
+          )
+        )
+      );
+    }
+    /* ==========================================
+       گروه‌بندی بر اساس تاریخ میلادی دیتابیس
+    ========================================== */
     const groupedByDate = {};
-
     data.forEach(item => {
-
-      if (!item.activity_date) return;
-
+      if (!item.activity_date) {
+        return;
+      }
       const date =
-        String(item.activity_date).slice(0, 10);
-
+        String(item.activity_date)
+          .slice(0, 10);
       if (!groupedByDate[date]) {
         groupedByDate[date] = [];
       }
-
       groupedByDate[date].push(item);
-
     });
-
-
-    /* ==========================================
-       تبدیل تاریخ میلادی دیتابیس به شمسی
-    ========================================== */
-
-    function formatWorkerDate(dateString) {
-
-      if (!dateString) return "-";
-
-      const parts =
-        String(dateString).split("-");
-
-      if (parts.length !== 3) {
-        return String(dateString);
-      }
-
-      const year =
-        Number(parts[0]);
-
-      const month =
-        Number(parts[1]);
-
-      const day =
-        Number(parts[2]);
-
-      if (
-        !year ||
-        !month ||
-        !day
-      ) {
-        return String(dateString);
-      }
-
-      return new Intl.DateTimeFormat(
-        "fa-IR"
-      ).format(
-        new Date(
-          year,
-          month - 1,
-          day
-        )
-      );
-
-    }
-
-
     /* ==========================================
        مرتب‌سازی تاریخ‌ها
     ========================================== */
-
     const dates =
       Object.keys(groupedByDate)
         .sort((a, b) =>
           b.localeCompare(a)
         );
-
-
     /* ==========================================
        ساخت خروجی
     ========================================== */
-
-    box.innerHTML = dates.map(date => {
-
-      const dayActivities =
-        groupedByDate[date];
-
-
-      /* ========================================
-         گروه‌بندی افراد همان روز
-      ======================================== */
-
-      const people = {};
-
-
-      dayActivities.forEach(item => {
-
-        const person =
-          item.person_name ||
-          "بدون نام";
-
-
-        if (!people[person]) {
-
-          people[person] = {
-
-            hours: 0,
-
-            projects: [],
-
-            descriptions: []
-
-          };
-
-        }
-
-
-        people[person].hours +=
-          Number(item.hours || 0);
-
-
-        /* پروژه */
-
-        if (item.project_id) {
-
-          const projectName =
-            projects[item.project_id];
-
+    box.innerHTML =
+      dates.map(date => {
+        const dayActivities =
+          groupedByDate[date];
+        /* ========================================
+           گروه‌بندی افراد
+        ======================================== */
+        const people = {};
+        dayActivities.forEach(item => {
+          const person =
+            item.person_name ||
+            "بدون نام";
+          if (!people[person]) {
+            people[person] = {
+              hours: 0,
+              projects: [],
+              descriptions: []
+            };
+          }
+          people[person].hours +=
+            Number(item.hours || 0);
+          /* ======================================
+             پروژه
+          ====================================== */
+          let projectName = "";
+          if (item.project_id) {
+            projectName =
+              projects[
+                String(item.project_id)
+              ] || "";
+          }
+          /*
+           * اگر پروژه در db.projects نبود،
+           * برای رکوردهای شناخته‌شده همچنان
+           * اطلاعات فعالیت نمایش داده شود.
+           */
           if (
             projectName &&
             !people[person].projects.includes(
               projectName
             )
           ) {
-
             people[person].projects.push(
               projectName
             );
-
           }
-
-        }
-
-
-        /* توضیحات */
-
-        if (item.description) {
-
-          if (
-            !people[person].descriptions.includes(
-              item.description
-            )
-          ) {
-
-            people[person].descriptions.push(
-              item.description
-            );
-
+          /* ======================================
+             توضیحات
+          ====================================== */
+          if (item.description) {
+            if (
+              !people[person]
+                .descriptions
+                .includes(
+                  item.description
+                )
+            ) {
+              people[person]
+                .descriptions
+                .push(
+                  item.description
+                );
+            }
           }
-
-        }
-
-      });
-
-
-      const peopleEntries =
-        Object.entries(people);
-
-
-      /* ========================================
-         آکاردئون روز
-      ======================================== */
-
-      return `
-
-        <details class="accounting-accordion">
-
-          <summary>
-
-            <span>
-              📅 ${formatWorkerDate(date)}
-            </span>
-
-            <span class="pill">
-              ${peopleEntries.length} نفر
-            </span>
-
-          </summary>
-
-
-          <div class="accordion-content">
-
-            ${
-              peopleEntries.length
-
-              ?
-
-              peopleEntries.map(
-                ([person, info]) => `
-
-                  <div
-                    style="
-                      background:#f9fafb;
-                      border:1px solid #e5e7eb;
-                      border-radius:14px;
-                      padding:14px;
-                      margin-bottom:10px;
-                    "
-                  >
-
+        });
+        const peopleEntries =
+          Object.entries(people);
+        /* ========================================
+           آکاردئون روز
+        ======================================== */
+        return `
+          <details
+            class="accounting-accordion"
+          >
+            <summary>
+              <span>
+                📅 ${formatWorkerDate(date)}
+              </span>
+              <span class="pill">
+                ${peopleEntries.length}
+                نفر
+              </span>
+            </summary>
+            <div
+              class="accordion-content"
+            >
+              ${
+                peopleEntries.length
+                ?
+                peopleEntries.map(
+                  ([person, info]) => `
                     <div
                       style="
-                        display:flex;
-                        justify-content:space-between;
-                        align-items:center;
-                        gap:10px;
+                        background:#f9fafb;
+                        border:1px solid #e5e7eb;
+                        border-radius:14px;
+                        padding:14px;
+                        margin-bottom:10px;
                       "
                     >
-
-                      <strong>
-                        👤 ${esc(person)}
-                      </strong>
-
-
-                      <strong class="success">
-                        ⏱️ ${info.hours}
-                        ساعت
-                      </strong>
-
+                      <div
+                        style="
+                          display:flex;
+                          justify-content:space-between;
+                          align-items:center;
+                          gap:10px;
+                        "
+                      >
+                        <strong>
+                          👤 ${esc(person)}
+                        </strong>
+                        <strong
+                          class="success"
+                        >
+                          ⏱️ ${info.hours}
+                          ساعت
+                        </strong>
+                      </div>
+                      ${
+                        info.projects.length
+                        ?
+                        `
+                          <div
+                            class="muted"
+                            style="
+                              margin-top:8px
+                            "
+                          >
+                            🏗️ پروژه:
+                            ${esc(
+                              info.projects.join(
+                                " • "
+                              )
+                            )}
+                          </div>
+                        `
+                        :
+                        ""
+                      }
+                      ${
+                        info.descriptions.length
+                        ?
+                        `
+                          <div
+                            class="muted"
+                            style="
+                              margin-top:7px
+                            "
+                          >
+                            📝
+                            ${esc(
+                              info.descriptions.join(
+                                " • "
+                              )
+                            )}
+                          </div>
+                        `
+                        :
+                        ""
+                      }
                     </div>
-
-
-                    ${
-                      info.projects.length
-
-                      ?
-
-                      `
-                        <div
-                          class="muted"
-                          style="margin-top:8px"
-                        >
-                          🏗️ پروژه:
-                          ${esc(
-                            info.projects.join(" • ")
-                          )}
-                        </div>
-                      `
-
-                      :
-
-                      ""
-                    }
-
-
-                    ${
-                      info.descriptions.length
-
-                      ?
-
-                      `
-                        <div
-                          class="muted"
-                          style="margin-top:7px"
-                        >
-                          📝
-                          ${esc(
-                            info.descriptions.join(" • ")
-                          )}
-                        </div>
-                      `
-
-                      :
-
-                      ""
-                    }
-
-                  </div>
-
+                  `
+                ).join("")
+                :
                 `
-              ).join("")
-
-              :
-
-              `
-                <div class="empty">
-                  فعالیتی برای این روز ثبت نشده.
-                </div>
-              `
-            }
-
-          </div>
-
-        </details>
-
-      `;
-
-    }).join("");
-
-
+                  <div class="empty">
+                    فعالیتی برای این روز
+                    ثبت نشده.
+                  </div>
+                `
+              }
+            </div>
+          </details>
+        `;
+      }).join("");
   } catch (error) {
-
     console.error(
       "WORKER ACTIVITIES ERROR:",
       error
     );
-
-
     box.innerHTML = `
-
-      <div class="notice error-box">
-
+      <div
+        class="
+          notice
+          error-box
+        "
+      >
         ❌ خطا در دریافت فعالیت‌ها
-
         <br><br>
-
         <small>
           ${esc(
             error?.message ||
             String(error)
           )}
         </small>
-
       </div>
-
     `;
-
   }
-
 }
-
-
 /* =====================================================
    INVENTORY
 ===================================================== */
