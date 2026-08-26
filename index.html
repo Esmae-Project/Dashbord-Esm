@@ -4222,6 +4222,9 @@ async function loadLatestRecords() {
             personalAccountsRes,
             personalExpensesRes
         ] = await Promise.all([
+            /* =========================
+               تراکنش‌ها
+            ========================= */
             sb
                 .from("transactions")
                 .select(`
@@ -4239,6 +4242,9 @@ async function loadLatestRecords() {
                     ascending: false
                 })
                 .limit(10),
+            /* =========================
+               خریدها
+            ========================= */
             sb
                 .from("purchases")
                 .select(`
@@ -4256,6 +4262,9 @@ async function loadLatestRecords() {
                     ascending: false
                 })
                 .limit(10),
+            /* =========================
+               فعالیت نیرو
+            ========================= */
             sb
                 .from("worker_activities")
                 .select(`
@@ -4271,6 +4280,9 @@ async function loadLatestRecords() {
                     ascending: false
                 })
                 .limit(10),
+            /* =========================
+               حساب شخصی
+            ========================= */
             sb
                 .from("personal_accounts")
                 .select("*")
@@ -4278,6 +4290,9 @@ async function loadLatestRecords() {
                     ascending: false
                 })
                 .limit(10),
+            /* =========================
+               هزینه شخصی
+            ========================= */
             sb
                 .from("personal_expenses")
                 .select(`
@@ -4304,6 +4319,9 @@ async function loadLatestRecords() {
             throw personalAccountsRes.error;
         if (personalExpensesRes.error)
             throw personalExpensesRes.error;
+        /* =========================
+           پیمانکاران
+        ========================= */
         const contractors =
             Object.fromEntries(
                 Object.entries(
@@ -4313,6 +4331,9 @@ async function loadLatestRecords() {
                         [data.id, name]
                 )
             );
+        /* =========================
+           پروژه‌ها
+        ========================= */
         const projects =
             Object.fromEntries(
                 Object.entries(
@@ -4330,11 +4351,18 @@ async function loadLatestRecords() {
             .forEach(item => {
                 if (
                     item.status === "replaced"
-                ) return;
+                ) {
+                    return;
+                }
                 const isPayment =
                     item.type === "payment";
                 records.push({
+                    /*
+                     * برای تراکنش، تاریخ واقعی
+                     * تراکنش را استفاده می‌کنیم.
+                     */
                     date:
+                        item.transaction_date ||
                         item.created_at,
                     type:
                         isPayment
@@ -4359,11 +4387,8 @@ async function loadLatestRecords() {
                     description:
                         item.description || "",
                     /*
-                     * amount_toman در دیتابیس
-                     * بر اساس تومان ذخیره شده.
-                     *
-                     * نمایش در سایت = ریال
-                     * تومان × ۱۰ = ریال
+                     * تومان ذخیره شده
+                     * نمایش ریال
                      */
                     amount:
                         Number(
@@ -4377,8 +4402,12 @@ async function loadLatestRecords() {
         (purchasesRes.data || [])
             .forEach(item => {
                 records.push({
+                    /*
+                     * تاریخ واقعی خرید
+                     */
                     date:
-                        item.purchase_date,
+                        item.purchase_date ||
+                        item.created_at,
                     type:
                         "purchase",
                     icon:
@@ -4394,8 +4423,7 @@ async function loadLatestRecords() {
                     description:
                         item.item_name || "",
                     /*
-                     * مبلغ ذخیره‌شده = تومان
-                     * مبلغ نمایش داده‌شده = ریال
+                     * تومان → ریال
                      */
                     amount:
                         Number(
@@ -4409,8 +4437,11 @@ async function loadLatestRecords() {
         (workerRes.data || [])
             .forEach(item => {
                 records.push({
+                    /*
+                     * خیلی مهم:
+                     * تاریخ فعالیت، نه تاریخ ثبت رکورد
+                     */
                     date:
-                        |
                         item.activity_date,
                     type:
                         "worker",
@@ -4439,8 +4470,8 @@ async function loadLatestRecords() {
             .forEach(item => {
                 records.push({
                     date:
-                        item.created_at ||
-                        item.account_date,
+                        item.account_date ||
+                        item.created_at,
                     type:
                         "personal",
                     icon:
@@ -4455,6 +4486,9 @@ async function loadLatestRecords() {
                     description:
                         item.account_type ||
                         "",
+                    /*
+                     * تومان → ریال
+                     */
                     amount:
                         Number(
                             item.amount_toman || 0
@@ -4468,8 +4502,8 @@ async function loadLatestRecords() {
             .forEach(item => {
                 records.push({
                     date:
-                        item.created_at ||
-                        item.expense_date,
+                        item.expense_date ||
+                        item.created_at,
                     type:
                         "expense",
                     icon:
@@ -4483,6 +4517,9 @@ async function loadLatestRecords() {
                     description:
                         item.item_name ||
                         "",
+                    /*
+                     * تومان → ریال
+                     */
                     amount:
                         Number(
                             item.amount_toman || 0
@@ -4493,10 +4530,19 @@ async function loadLatestRecords() {
            مرتب‌سازی
         ========================= */
         records.sort(
-            (a, b) =>
-                new Date(b.date || 0) -
-                new Date(a.date || 0)
+            (a, b) => {
+                const dateA =
+                    new Date(a.date || 0)
+                        .getTime();
+                const dateB =
+                    new Date(b.date || 0)
+                        .getTime();
+                return dateB - dateA;
+            }
         );
+        /* =========================
+           ۱۰ ثبت آخر
+        ========================= */
         const latest =
             records.slice(0, 10);
         if (!latest.length) {
@@ -4508,18 +4554,68 @@ async function loadLatestRecords() {
             return;
         }
         /* =========================
+           فرمت تاریخ
+        ========================= */
+        function formatLatestDate(
+            dateString
+        ) {
+            if (!dateString) {
+                return "-";
+            }
+            const value =
+                String(dateString)
+                    .slice(0, 10);
+            const parts =
+                value.split("-");
+            if (parts.length !== 3) {
+                return value;
+            }
+            const year =
+                Number(parts[0]);
+            const month =
+                Number(parts[1]);
+            const day =
+                Number(parts[2]);
+            if (
+                !Number.isInteger(year) ||
+                !Number.isInteger(month) ||
+                !Number.isInteger(day)
+            ) {
+                return value;
+            }
+            /*
+             * UTC برای جلوگیری از
+             * عقب/جلو شدن تاریخ
+             */
+            return new Intl.DateTimeFormat(
+                "fa-IR-u-ca-persian",
+                {
+                    year: "numeric",
+                    month: "numeric",
+                    day: "numeric"
+                }
+            ).format(
+                new Date(
+                    Date.UTC(
+                        year,
+                        month - 1,
+                        day,
+                        12,
+                        0,
+                        0
+                    )
+                )
+            );
+        }
+        /* =========================
            خروجی
         ========================= */
         box.innerHTML =
             latest.map(item => {
                 const date =
-                    item.date
-                        ? new Date(
-                            item.date
-                        ).toLocaleDateString(
-                            "fa-IR"
-                        )
-                        : "-";
+                    formatLatestDate(
+                        item.date
+                    );
                 return `
                     <details
                         class="
@@ -4539,7 +4635,9 @@ async function loadLatestRecords() {
                                     "
                                 >
                                     ${item.icon}
-                                    ${esc(item.title)}
+                                    ${esc(
+                                        item.title
+                                    )}
                                 </span>
                                 ${
                                     item.amount !== null
@@ -4573,7 +4671,9 @@ async function loadLatestRecords() {
                                 ?
                                 `
                                 👤
-                                ${esc(item.person)}
+                                ${esc(
+                                    item.person
+                                )}
                                 <br>
                                 `
                                 :
@@ -4584,7 +4684,9 @@ async function loadLatestRecords() {
                                 ?
                                 `
                                 🏗️ پروژه:
-                                ${esc(item.project)}
+                                ${esc(
+                                    item.project
+                                )}
                                 <br>
                                 `
                                 :
@@ -4595,7 +4697,9 @@ async function loadLatestRecords() {
                                 ?
                                 `
                                 📝
-                                ${esc(item.description)}
+                                ${esc(
+                                    item.description
+                                )}
                                 <br>
                                 `
                                 :
