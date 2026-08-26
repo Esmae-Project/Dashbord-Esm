@@ -3372,6 +3372,12 @@ async function loadPurchases() {
 
   try {
 
+    if (!sb) {
+      throw new Error(
+        "اتصال به Supabase برقرار نیست."
+      );
+    }
+
     const { data, error } = await sb
       .from("purchases")
       .select(`
@@ -3385,6 +3391,9 @@ async function loadPurchases() {
         description
       `)
       .order("purchase_date", {
+        ascending: false
+      })
+      .order("created_at", {
         ascending: false
       });
 
@@ -3410,7 +3419,8 @@ async function loadPurchases() {
     data.forEach(purchase => {
 
       const date =
-        purchase.purchase_date || "بدون تاریخ";
+        purchase.purchase_date ||
+        "بدون تاریخ";
 
       if (!groups[date]) {
         groups[date] = [];
@@ -3451,23 +3461,25 @@ async function loadPurchases() {
 
 
         /*
-         * مقدار amount_toman در دیتابیس
-         * هنوز بر اساس تومان ذخیره شده.
+         * مبلغ موجود در Supabase
+         * مبلغ نهایی ریالی است.
          *
-         * بنابراین فقط برای نمایش:
-         *
-         * تومان × ۱۰ = ریال
+         * در بخش نمایش هیچ تبدیلی
+         * انجام نمی‌دهیم.
          */
 
         const totalRial =
           purchases.reduce(
-            (sum, item) =>
-              sum +
-              (
+            (sum, item) => {
+
+              return (
+                sum +
                 Number(
                   item.amount_toman || 0
                 )
-              ),
+              );
+
+            },
             0
           );
 
@@ -3523,14 +3535,16 @@ async function loadPurchases() {
               ${purchases.map(purchase => {
 
                 /*
-                 * مبلغ ذخیره‌شده = تومان
-                 * مبلغ نمایش داده‌شده = ریال
+                 * مقدار Supabase
+                 * مستقیماً ریال است.
+                 *
+                 * هیچ ×10 یا ÷10 انجام نمی‌شود.
                  */
 
                 const amountRial =
                   Number(
                     purchase.amount_toman || 0
-                  ) * 10;
+                  );
 
 
                 return `
