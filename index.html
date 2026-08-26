@@ -3033,37 +3033,29 @@ async function loadInventory() {
        دریافت اقلام انبار
     ===================================================== */
 
-    const { data, error } = await sb
-      .from("inventory_items")
-      .select(`
-        id,
-        project_id,
-        item_name,
-        unit,
-        current_quantity,
-        created_at,
-        updated_at
-      `)
-      .order("item_name", {
-        ascending: true
-      });
+    const { data: inventoryData, error: inventoryError } =
+      await sb
+        .from("inventory_items")
+        .select(`
+          id,
+          project_id,
+          item_name,
+          unit,
+          current_quantity,
+          created_at,
+          updated_at
+        `)
+        .order("item_name", {
+          ascending: true
+        });
 
-    if (error) {
-      throw error;
+    if (inventoryError) {
+      throw inventoryError;
     }
 
 
     /* =====================================================
        فیلتر اقلام غیرانبار
-       
-       این موارد نباید موجودی فیزیکی محسوب شوند:
-       - کرایه
-       - حمل
-       - غذا / ناهار
-       - تعمیر
-       - خدمات
-       - دستمزد
-       - پذیرایی
     ===================================================== */
 
     const NON_INVENTORY_WORDS = [
@@ -3098,24 +3090,20 @@ async function loadInventory() {
           item?.item_name || ""
         ).trim().toLowerCase();
 
-
       if (!name) {
         return false;
       }
 
-
       return !NON_INVENTORY_WORDS.some(
         word =>
-          name.includes(
-            word
-          )
+          name.includes(word)
       );
 
     }
 
 
     const inventoryItems =
-      (data || []).filter(
+      (inventoryData || []).filter(
         isRealInventoryItem
       );
 
@@ -3135,7 +3123,6 @@ async function loadInventory() {
           ascending: true
         });
 
-
     if (projectsError) {
       throw projectsError;
     }
@@ -3153,34 +3140,75 @@ async function loadInventory() {
 
 
     /* =====================================================
-       اگر موجودی نداریم
+       دریافت گردش‌های ورود به انبار
+       
+       تاریخ نمایش از movement_date گرفته می‌شود،
+       نه created_at اقلام انبار.
     ===================================================== */
 
-    if (
-      !inventoryItems ||
-      inventoryItems.length === 0
-    ) {
+    const { data: movementsData, error: movementsError } =
+      await sb
+        .from("inventory_movements")
+        .select(`
+          id,
+          item_id,
+          movement_type,
+          quantity,
+          unit,
+          movement_date,
+          description,
+          created_at
+        `)
+        .eq("movement_type", "in")
+        .order("movement_date", {
+          ascending: false
+        });
 
-      box.innerHTML = `
-        <div class="empty">
-          📦 هنوز موجودی واقعی برای انبار ثبت نشده.
-        </div>
-      `;
-
-      return;
-
+    if (movementsError) {
+      throw movementsError;
     }
 
 
     /* =====================================================
-       گروه‌بندی بر اساس پروژه
+       ساخت Map اقلام انبار
+    ===================================================== */
+
+    const inventoryById =
+      Object.fromEntries(
+        inventoryItems.map(
+          item => [
+            item.id,
+            item
+          ]
+        )
+      );
+
+
+    /* =====================================================
+       گروه‌بندی:
+       
+       پروژه
+          ↓
+       تاریخ
+          ↓
+       اقلام واردشده
     ===================================================== */
 
     const grouped = {};
 
 
-    inventoryItems.forEach(
-      item => {
+    (movementsData || []).forEach(
+      movement => {
+
+        const item =
+          inventoryById[
+            movement.item_id
+          ];
+
+        if (!item) {
+          return;
+        }
+
 
         const projectName =
           projectsById[
@@ -3191,27 +3219,142 @@ async function loadInventory() {
 
         if (!grouped[projectName]) {
 
-          grouped[projectName] = [];
+          grouped[projectName] = {};
 
         }
 
 
-        grouped[projectName].push(
-          item
-        );
+        const dateKey =
+          movement.movement_date
+            ? String(
+                movement.movement_date
+              ).slice(0, 10)
+            : "بدون تاریخ";
+
+
+        if (!grouped[projectName][dateKey]) {
+
+          grouped[projectName][dateKey] = [];
+
+        }
+
+
+        grouped[projectName][dateKey].push({
+
+          item,
+
+          quantity:
+            Number(
+              movement.quantity || 0
+            ),
+
+          unit:
+            movement.unit ||
+            item.unit ||
+            "عدد",
+
+          description:
+            movement.description || ""
+
+        });
 
       }
     );
 
 
     /* =====================================================
-       ساخت خروجی
+       اگر هیچ ورودی انبار نداریم
+    ===================================================== */
+
+    if (
+      Object.keys(grouped).length === 0
+    ) {
+
+      box.innerHTML = `
+        <div class="empty">
+          📦 هنوز ورود واقعی به انبار ثبت نشده.
+        </div>
+      `;
+
+      return;
+
+    }
+
+
+    /* =====================================================
+       تبدیل تاریخ میلادی به شمسی
+    ===================================================== */
+
+    function formatInventoryDate(dateString) {
+
+      if (!dateString) {
+        return "بدون تاریخ";
+      }
+
+      const date =
+        new Date(
+          `${dateString}T12:00:00`
+        );
+
+      if (
+        Number.isNaN(
+          date.getTime()
+        )
+      ) {
+        return esc(dateString);
+      }
+
+      return new Intl.DateTimeFormat(
+        "fa-IR-u-ca-persian",
+        {
+          year: "numeric",
+          month: "long",
+          day: "numeric"
+        }
+      ).format(date);
+
+    }
+
+
+    /* =====================================================
+       مرتب‌سازی پروژه‌ها
+    ===================================================== */
+
+    const projectEntries =
+      Object.entries(grouped)
+        .sort(
+          ([a], [b]) =>
+            a.localeCompare(
+              b,
+              "fa"
+            )
+        );
+
+
+    /* =====================================================
+       ساخت خروجی نهایی
+       
+       انبار
+          ↓
+       پروژه
+          ↓
+       روز
+          ↓
+       اقلام
     ===================================================== */
 
     box.innerHTML =
-      Object.entries(grouped)
+      projectEntries
         .map(
-          ([projectName, items]) => {
+          ([projectName, dates]) => {
+
+            const dateEntries =
+              Object.entries(dates)
+                .sort(
+                  ([a], [b]) =>
+                    b.localeCompare(a)
+                );
+
 
             return `
 
@@ -3224,8 +3367,8 @@ async function loadInventory() {
                   </span>
 
                   <span class="pill">
-                    ${items.length.toLocaleString("fa-IR")}
-                    قلم
+                    ${dateEntries.length.toLocaleString("fa-IR")}
+                    روز
                   </span>
 
                 </summary>
@@ -3234,83 +3377,132 @@ async function loadInventory() {
                 <div class="accordion-content">
 
                   ${
-                    items.map(
-                      item => {
+                    dateEntries
+                      .map(
+                        ([dateKey, movements]) => {
 
-                        const quantity =
-                          Number(
-                            item.current_quantity || 0
-                          );
+                          return `
 
-
-                        const unit =
-                          item.unit ||
-                          "عدد";
-
-
-                        const quantityClass =
-                          quantity > 0
-                            ? "success"
-                            : "danger";
-
-
-                        return `
-
-                          <div
-                            style="
-                              background:#f9fafb;
-                              border:1px solid #e5e7eb;
-                              border-radius:14px;
-                              padding:14px;
-                              margin-bottom:10px;
-                            "
-                          >
-
-                            <div
+                            <details
+                              class="accounting-accordion"
                               style="
-                                display:flex;
-                                justify-content:space-between;
-                                align-items:center;
-                                gap:10px;
+                                margin:10px 0;
+                                border:1px solid #e5e7eb;
                               "
                             >
 
-                              <strong>
-                                📦 ${esc(
-                                  item.item_name
-                                )}
-                              </strong>
+                              <summary>
+
+                                <span>
+                                  📅
+                                  ${formatInventoryDate(
+                                    dateKey
+                                  )}
+                                </span>
+
+                                <span class="pill">
+                                  ${movements.length.toLocaleString("fa-IR")}
+                                  قلم
+                                </span>
+
+                              </summary>
 
 
-                              <strong
-                                class="${quantityClass}"
-                              >
-                                ${quantity.toLocaleString("fa-IR")}
-                                ${esc(unit)}
-                              </strong>
+                              <div class="accordion-content">
 
-                            </div>
+                                ${
+                                  movements
+                                    .map(
+                                      movement => {
+
+                                        const quantity =
+                                          Number(
+                                            movement.quantity || 0
+                                          );
 
 
-                            <div
-                              class="muted"
-                              style="margin-top:8px"
-                            >
+                                        const quantityClass =
+                                          quantity > 0
+                                            ? "success"
+                                            : "danger";
 
-                              موجودی فعلی:
-                              <b>
-                                ${quantity.toLocaleString("fa-IR")}
-                                ${esc(unit)}
-                              </b>
 
-                            </div>
+                                        return `
 
-                          </div>
+                                          <div
+                                            style="
+                                              background:#f9fafb;
+                                              border:1px solid #e5e7eb;
+                                              border-radius:14px;
+                                              padding:14px;
+                                              margin-bottom:10px;
+                                            "
+                                          >
 
-                        `;
+                                            <div
+                                              style="
+                                                display:flex;
+                                                justify-content:space-between;
+                                                align-items:center;
+                                                gap:10px;
+                                              "
+                                            >
 
-                      }
-                    ).join("")
+                                              <strong>
+                                                📦
+                                                ${esc(
+                                                  movement.item.item_name
+                                                )}
+                                              </strong>
+
+
+                                              <strong
+                                                class="${quantityClass}"
+                                              >
+                                                +
+                                                ${quantity.toLocaleString("fa-IR")}
+                                                ${esc(
+                                                  movement.unit
+                                                )}
+                                              </strong>
+
+                                            </div>
+
+
+                                            ${
+                                              movement.description
+                                                ? `
+                                                  <div
+                                                    class="muted"
+                                                    style="margin-top:8px"
+                                                  >
+                                                    ${esc(
+                                                      movement.description
+                                                    )}
+                                                  </div>
+                                                `
+                                                : ""
+                                            }
+
+                                          </div>
+
+                                        `;
+
+                                      }
+                                    )
+                                    .join("")
+
+                                }
+
+                              </div>
+
+                            </details>
+
+                          `;
+
+                        }
+                      )
+                      .join("")
 
                   }
 
