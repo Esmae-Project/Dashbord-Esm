@@ -4409,21 +4409,27 @@ async function loadPersonalExpenses() {
 async function loadLatestRecords() {
     const box =
         document.getElementById("latestRecords");
+
     if (!box) return;
+
     box.innerHTML = `
         <div class="empty">
             ⏳ در حال دریافت آخرین ثبت‌ها...
         </div>
     `;
+
     try {
+
         if (!sb) {
             throw new Error(
                 "اتصال به Supabase برقرار نیست."
             );
         }
+
         /* ==========================================
            دریافت اطلاعات مستقیم از Supabase
         ========================================== */
+
         const [
             transactionsRes,
             purchasesRes,
@@ -4431,6 +4437,7 @@ async function loadLatestRecords() {
             personalAccountsRes,
             personalExpensesRes
         ] = await Promise.all([
+
             sb
                 .from("transactions")
                 .select(`
@@ -4448,6 +4455,7 @@ async function loadLatestRecords() {
                     ascending: false
                 })
                 .limit(20),
+
             sb
                 .from("purchases")
                 .select(`
@@ -4465,6 +4473,7 @@ async function loadLatestRecords() {
                     ascending: false
                 })
                 .limit(20),
+
             sb
                 .from("worker_activities")
                 .select(`
@@ -4480,6 +4489,7 @@ async function loadLatestRecords() {
                     ascending: false
                 })
                 .limit(20),
+
             sb
                 .from("personal_accounts")
                 .select("*")
@@ -4487,6 +4497,7 @@ async function loadLatestRecords() {
                     ascending: false
                 })
                 .limit(20),
+
             sb
                 .from("personal_expenses")
                 .select(`
@@ -4502,69 +4513,123 @@ async function loadLatestRecords() {
                     ascending: false
                 })
                 .limit(20)
+
         ]);
+
+
+        /* ==========================================
+           بررسی خطاها
+        ========================================== */
+
         if (transactionsRes.error)
             throw transactionsRes.error;
+
         if (purchasesRes.error)
             throw purchasesRes.error;
+
         if (workerRes.error)
             throw workerRes.error;
+
         if (personalAccountsRes.error)
             throw personalAccountsRes.error;
+
         if (personalExpensesRes.error)
             throw personalExpensesRes.error;
+
+
         /* ==========================================
            پروژه‌ها
         ========================================== */
+
         const projects = {};
+
         Object.entries(db.projects || {})
             .forEach(([name, project]) => {
-                if (project && project.id) {
-                    projects[String(project.id)] = name;
+
+                if (
+                    project &&
+                    project.id
+                ) {
+
+                    projects[
+                        String(project.id)
+                    ] = name;
+
                 }
+
             });
+
+
         /* ==========================================
            پیمانکاران
         ========================================== */
+
         const contractors = {};
+
         Object.entries(db.contractors || {})
             .forEach(([name, contractor]) => {
-                if (contractor && contractor.id) {
-                    contractors[String(contractor.id)] = name;
+
+                if (
+                    contractor &&
+                    contractor.id
+                ) {
+
+                    contractors[
+                        String(contractor.id)
+                    ] = name;
+
                 }
+
             });
+
+
         /* ==========================================
            تبدیل تاریخ میلادی به شمسی
            
-           نکته مهم:
-           از UTC استفاده شده تا timezone
-           باعث عقب افتادن تاریخ نشود.
+           فقط برای نمایش تاریخ استفاده می‌شود.
+           ترتیب رکوردها با created_at انجام می‌شود.
         ========================================== */
+
         function formatLatestDate(dateString) {
+
             if (!dateString) {
                 return "-";
             }
+
             const value =
                 String(dateString)
                     .slice(0, 10);
+
             const parts =
                 value.split("-");
-            if (parts.length !== 3) {
+
+            if (
+                parts.length !== 3
+            ) {
+
                 return value;
+
             }
+
             const year =
                 Number(parts[0]);
+
             const month =
                 Number(parts[1]);
+
             const day =
                 Number(parts[2]);
+
             if (
                 !Number.isInteger(year) ||
                 !Number.isInteger(month) ||
                 !Number.isInteger(day)
             ) {
+
                 return value;
+
             }
+
             return new Intl.DateTimeFormat(
                 "fa-IR-u-ca-persian",
                 {
@@ -4584,360 +4649,575 @@ async function loadLatestRecords() {
                     )
                 )
             );
+
         }
+
+
         /* ==========================================
-           ساخت رکوردها
-           
-           تمام مبالغ مستقیماً ریالی هستند.
-           هیچ ×۱۰ انجام نمی‌شود.
+           ساخت آرایه آخرین رکوردها
         ========================================== */
+
         const records = [];
+
+
         /* ==========================================
            تراکنش‌ها
+           
+           شامل:
+           - کار انجام‌شده
+           - پرداخت
         ========================================== */
+
         (transactionsRes.data || [])
             .forEach(item => {
+
+                /*
+                 * فاکتورهای جایگزین‌شده
+                 * نباید در آخرین ثبت‌ها نمایش داده شوند.
+                 */
+
                 if (
                     item.status === "replaced"
                 ) {
+
                     return;
+
                 }
+
+
                 const isPayment =
                     item.type === "payment";
+
+
                 records.push({
+
+                    /*
+                     * تاریخ خود رکورد
+                     * فقط برای نمایش
+                     */
+
                     date:
                         item.transaction_date ||
                         item.created_at,
+
+
+                    /*
+                     * زمان واقعی ثبت
+                     * معیار اصلی مرتب‌سازی
+                     */
+
                     createdAt:
                         item.created_at,
+
+
                     type:
                         isPayment
                             ? "payment"
                             : "work",
+
+
                     icon:
                         isPayment
                             ? "💰"
                             : "🟢",
+
+
                     title:
                         isPayment
                             ? "پرداخت"
                             : "کار انجام‌شده",
+
+
                     person:
                         contractors[
-                            String(item.contractor_id)
-                        ] || "نامشخص",
+                            String(
+                                item.contractor_id
+                            )
+                        ] ||
+                        "نامشخص",
+
+
                     project:
                         projects[
-                            String(item.project_id)
-                        ] || "نامشخص",
+                            String(
+                                item.project_id
+                            )
+                        ] ||
+                        "نامشخص",
+
+
                     description:
                         item.description || "",
+
+
+                    /*
+                     * مبلغ در Supabase
+                     * از قبل ریالی است.
+                     *
+                     * هیچ ×۱۰ انجام نمی‌شود.
+                     */
+
                     amount:
                         Number(
                             item.amount_toman || 0
                         )
+
                 });
+
             });
+
+
         /* ==========================================
            خریدها
         ========================================== */
+
         (purchasesRes.data || [])
             .forEach(item => {
+
                 records.push({
+
                     date:
                         item.purchase_date ||
                         item.created_at,
+
                     createdAt:
                         item.created_at,
+
                     type:
                         "purchase",
+
                     icon:
                         "🛒",
+
                     title:
                         "خرید",
+
                     person:
                         "",
+
                     project:
                         projects[
-                            String(item.project_id)
-                        ] || "نامشخص",
+                            String(
+                                item.project_id
+                            )
+                        ] ||
+                        "نامشخص",
+
                     description:
                         item.item_name || "",
+
+                    /*
+                     * مبلغ مستقیماً ریالی است.
+                     */
+
                     amount:
                         Number(
                             item.amount_toman || 0
                         )
+
                 });
+
             });
+
+
         /* ==========================================
-           فعالیت نیرو
+           فعالیت نیروها
         ========================================== */
+
         (workerRes.data || [])
             .forEach(item => {
+
                 records.push({
+
                     /*
-                     * تاریخ فعالیت واقعی
+                     * تاریخ واقعی فعالیت
+                     * برای نمایش
                      */
+
                     date:
                         item.activity_date,
+
+
                     /*
-                     * فقط برای مرتب‌سازی
+                     * زمان واقعی ثبت در Supabase
+                     * برای مرتب‌سازی
                      */
+
                     createdAt:
                         item.created_at,
+
+
                     type:
                         "worker",
+
                     icon:
                         "👷",
+
                     title:
                         "فعالیت نیرو",
+
                     person:
                         item.person_name ||
                         "نامشخص",
+
                     project:
                         projects[
-                            String(item.project_id)
-                        ] || "نامشخص",
+                            String(
+                                item.project_id
+                            )
+                        ] ||
+                        "نامشخص",
+
                     description:
                         item.description ||
                         `${item.hours || 0} ساعت`,
+
                     amount:
                         null
+
                 });
+
             });
+
+
         /* ==========================================
            حساب شخصی
         ========================================== */
+
         (personalAccountsRes.data || [])
             .forEach(item => {
+
                 records.push({
+
                     date:
                         item.account_date ||
                         item.created_at,
+
                     createdAt:
                         item.created_at,
+
                     type:
                         "personal",
+
                     icon:
                         "👤",
+
                     title:
                         "حساب شخصی",
+
                     person:
                         item.person_name ||
                         "نامشخص",
+
                     project:
                         "",
+
                     description:
                         item.account_type ||
                         "",
+
+                    /*
+                     * مبلغ ریالی
+                     */
+
                     amount:
                         Number(
                             item.amount_toman || 0
                         )
+
                 });
+
             });
+
+
         /* ==========================================
            هزینه شخصی
         ========================================== */
+
         (personalExpensesRes.data || [])
             .forEach(item => {
+
                 records.push({
+
                     date:
                         item.expense_date ||
                         item.created_at,
+
                     createdAt:
                         item.created_at,
+
                     type:
                         "expense",
+
                     icon:
                         "🛍️",
+
                     title:
                         "هزینه شخصی",
+
                     person:
                         "",
+
                     project:
                         "",
+
                     description:
                         item.item_name ||
                         "",
+
                     /*
                      * مبلغ مستقیماً ریالی است.
                      * ×۱۰ ممنوع.
                      */
+
                     amount:
                         Number(
                             item.amount_toman || 0
                         )
+
                 });
+
             });
+
+
         /* ==========================================
-           مرتب‌سازی
+           مرتب‌سازی نهایی
+           
+           مهم:
+           فقط زمان واقعی ثبت در Supabase
+           یعنی created_at معیار ترتیب است.
+
+           جدیدترین ثبت = بالاترین رکورد
         ========================================== */
+
         records.sort((a, b) => {
-            const dateA =
-                String(a.date || "")
-                    .slice(0, 10);
-            const dateB =
-                String(b.date || "")
-                    .slice(0, 10);
-            /*
-             * اول تاریخ واقعی رکورد
-             */
-            if (dateA !== dateB) {
-                return dateB.localeCompare(dateA);
-            }
-            /*
-             * اگر تاریخ یکی بود،
-             * جدیدترین ثبت بالاتر باشد.
-             */
-            return new Date(
-                b.createdAt || 0
-            ).getTime()
-            -
-            new Date(
-                a.createdAt || 0
-            ).getTime();
+
+            const timeA =
+                new Date(
+                    a.createdAt || 0
+                ).getTime();
+
+            const timeB =
+                new Date(
+                    b.createdAt || 0
+                ).getTime();
+
+
+            return timeB - timeA;
+
         });
+
+
         /* ==========================================
-           ده ثبت آخر
+           فقط ۱۰ ثبت آخر
         ========================================== */
+
         const latest =
             records.slice(0, 10);
-        if (!latest.length) {
+
+
+        if (
+            !latest.length
+        ) {
+
             box.innerHTML = `
                 <div class="empty">
                     📭 هنوز ثبتی وجود ندارد.
                 </div>
             `;
+
             return;
+
         }
+
+
         /* ==========================================
            خروجی
         ========================================== */
+
         box.innerHTML =
-            latest.map(item => {
-                const date =
-                    formatLatestDate(
-                        item.date
-                    );
-                return `
-                    <details
-                        class="
-                            latest-record
-                            latest-${item.type}
-                        "
-                    >
-                        <summary>
-                            <div
-                                class="
-                                    latest-record-main
-                                "
-                            >
-                                <span
+            latest
+                .map(item => {
+
+                    const date =
+                        formatLatestDate(
+                            item.date
+                        );
+
+
+                    return `
+
+                        <details
+                            class="
+                                latest-record
+                                latest-${item.type}
+                            "
+                        >
+
+                            <summary>
+
+                                <div
                                     class="
-                                        latest-record-title
+                                        latest-record-main
                                     "
                                 >
-                                    ${item.icon}
-                                    ${esc(
-                                        item.title
-                                    )}
-                                </span>
-                                ${
-                                    item.amount !== null
-                                    ?
-                                    `
+
                                     <span
                                         class="
-                                            latest-record-amount
+                                            latest-record-title
                                         "
                                     >
-                                        ${Number(
-                                            item.amount || 0
-                                        ).toLocaleString(
-                                            "fa-IR"
+
+                                        ${item.icon}
+
+                                        ${esc(
+                                            item.title
                                         )}
-                                        ریال
+
                                     </span>
+
+
+                                    ${
+                                        item.amount !== null
+                                        ?
+                                        `
+
+                                        <span
+                                            class="
+                                                latest-record-amount
+                                            "
+                                        >
+
+                                            ${Number(
+                                                item.amount || 0
+                                            ).toLocaleString(
+                                                "fa-IR"
+                                            )}
+
+                                            ریال
+
+                                        </span>
+
+                                        `
+                                        :
+                                        ""
+                                    }
+
+                                </div>
+
+                            </summary>
+
+
+                            <div
+                                class="
+                                    latest-record-meta
+                                "
+                            >
+
+                                ${
+                                    item.person
+                                    ?
+                                    `
+
+                                    👤
+                                    ${esc(
+                                        item.person
+                                    )}
+
+                                    <br>
+
                                     `
                                     :
                                     ""
                                 }
-                            </div>
-                        </summary>
-                        <div
-                            class="
-                                latest-record-meta
-                            "
-                        >
-                            ${
-                                item.person
-                                ?
-                                `
-                                👤
-                                ${esc(
-                                    item.person
-                                )}
-                                <br>
-                                `
-                                :
-                                ""
-                            }
-                            ${
-                                item.project
-                                ?
-                                `
-                                🏗️ پروژه:
-                                ${esc(
+
+
+                                ${
                                     item.project
-                                )}
-                                <br>
-                                `
-                                :
-                                ""
-                            }
-                            ${
-                                item.description
-                                ?
-                                `
-                                📝
-                                ${esc(
+                                    ?
+                                    `
+
+                                    🏗️ پروژه:
+                                    ${esc(
+                                        item.project
+                                    )}
+
+                                    <br>
+
+                                    `
+                                    :
+                                    ""
+                                }
+
+
+                                ${
                                     item.description
-                                )}
-                                <br>
-                                `
-                                :
-                                ""
-                            }
-                            📅 ${date}
-                        </div>
-                    </details>
-                `;
-            }).join("");
+                                    ?
+                                    `
+
+                                    📝
+                                    ${esc(
+                                        item.description
+                                    )}
+
+                                    <br>
+
+                                    `
+                                    :
+                                    ""
+                                }
+
+
+                                📅 ${date}
+
+                            </div>
+
+                        </details>
+
+                    `;
+
+                })
+                .join("");
+
+
     }
+
     catch (error) {
+
         console.error(
             "LATEST RECORDS ERROR:",
             error
         );
+
+
         box.innerHTML = `
+
             <div
                 class="
                     notice
                     error-box
                 "
             >
+
                 ❌ خطا در دریافت آخرین ثبت‌ها
+
                 <br><br>
+
                 <small>
+
                     ${esc(
                         error?.message ||
                         String(error)
                     )}
+
                 </small>
+
             </div>
+
         `;
+
     }
+
 }
 
     
