@@ -1385,37 +1385,59 @@ function goTo(
     id,
     button
 ){
-
     document
         .querySelectorAll(
             "nav button"
         )
         .forEach(
-            b=>b.classList.remove(
+            b => b.classList.remove(
                 "active"
             )
         );
-
-    button.classList.add(
-        "active"
-    );
-
+    if (button) {
+        button.classList.add(
+            "active"
+        );
+    }
     document
         .querySelectorAll(
             ".view"
         )
         .forEach(
-            v=>v.classList.remove(
+            v => v.classList.remove(
                 "active"
             )
         );
-
-    document
-        .getElementById(id)
-        .classList.add(
-            "active"
+    const view =
+        document.getElementById(id);
+    if (!view) {
+        console.error(
+            "VIEW پیدا نشد:",
+            id
         );
-
+        return;
+    }
+    view.classList.add(
+        "active"
+    );
+    /* =====================================================
+       بارگذاری اطلاعات هر بخش
+    ===================================================== */
+    if (id === "dailyReports") {
+        loadDailyReports();
+    }
+    if (id === "inventory") {
+        loadInventory();
+    }
+    if (id === "purchases") {
+        loadPurchases();
+    }
+    if (id === "workerActivities") {
+        loadWorkerActivities();
+    }
+    if (id === "dashboard") {
+        loadLatestRecords();
+    }
 }
 
 
