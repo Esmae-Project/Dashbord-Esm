@@ -4467,7 +4467,335 @@ async function loadPersonalExpenses() {
   }
 }
 
+async function loadDailyReports() {
 
+    const box = document.getElementById("dailyReportsList");
+
+    if (!box) {
+        console.error("dailyReportsList پیدا نشد");
+        return;
+    }
+
+    box.innerHTML = `
+        <div class="empty">
+            ⏳ در حال دریافت گزارش‌ها...
+        </div>
+    `;
+
+    try {
+
+        if (!sb) {
+            throw new Error("اتصال به Supabase برقرار نیست.");
+        }
+
+        /* ==========================================
+           دریافت گزارش‌های روزانه
+        ========================================== */
+
+        const { data, error } = await sb
+            .from("daily_reports")
+            .select(`
+                id,
+                project_id,
+                report_date,
+                report_text,
+                created_at
+            `)
+            .order("report_date", {
+                ascending: false
+            })
+            .order("created_at", {
+                ascending: false
+            });
+
+        if (error) {
+            throw error;
+        }
+
+
+        /* ==========================================
+           پروژه‌ها
+        ========================================== */
+
+        const projects = {};
+
+        Object.entries(db.projects || {})
+            .forEach(([name, project]) => {
+
+                if (project && project.id) {
+
+                    projects[String(project.id)] = name;
+
+                }
+
+            });
+
+
+        /* ==========================================
+           اگر گزارشی نداریم
+        ========================================== */
+
+        if (!data || data.length === 0) {
+
+            box.innerHTML = `
+                <div class="empty">
+                    📭 هنوز گزارشی ثبت نشده است.
+                </div>
+            `;
+
+            return;
+        }
+
+
+        /* ==========================================
+           تبدیل تاریخ میلادی به شمسی
+        ========================================== */
+
+        function formatDailyReportDate(dateString) {
+
+            if (!dateString) {
+                return "-";
+            }
+
+            const value =
+                String(dateString).slice(0, 10);
+
+            const parts =
+                value.split("-");
+
+            if (parts.length !== 3) {
+                return value;
+            }
+
+            const year = Number(parts[0]);
+            const month = Number(parts[1]);
+            const day = Number(parts[2]);
+
+            if (
+                !Number.isInteger(year) ||
+                !Number.isInteger(month) ||
+                !Number.isInteger(day)
+            ) {
+                return value;
+            }
+
+            return new Intl.DateTimeFormat(
+                "fa-IR-u-ca-persian",
+                {
+                    year: "numeric",
+                    month: "numeric",
+                    day: "numeric"
+                }
+            ).format(
+                new Date(
+                    Date.UTC(
+                        year,
+                        month - 1,
+                        day,
+                        12,
+                        0,
+                        0
+                    )
+                )
+            );
+        }
+
+
+        /* ==========================================
+           گروه‌بندی:
+           پروژه → روز → گزارش
+        ========================================== */
+
+        const grouped = {};
+
+
+        data.forEach(report => {
+
+            const projectName =
+                projects[String(report.project_id)] ||
+                "پروژه نامشخص";
+
+            const reportDate =
+                String(report.report_date || "")
+                    .slice(0, 10);
+
+            if (!grouped[projectName]) {
+
+                grouped[projectName] = {};
+
+            }
+
+            if (!grouped[projectName][reportDate]) {
+
+                grouped[projectName][reportDate] = [];
+
+            }
+
+            grouped[projectName][reportDate].push(
+                report
+            );
+
+        });
+
+
+        /* ==========================================
+           ساخت خروجی
+        ========================================== */
+
+        box.innerHTML =
+            Object.entries(grouped)
+                .map(([projectName, dates]) => {
+
+                    const totalReports =
+                        Object.values(dates)
+                            .reduce(
+                                (sum, reports) =>
+                                    sum + reports.length,
+                                0
+                            );
+
+                    return `
+
+                        <details class="accounting-accordion">
+
+                            <summary>
+
+                                <span>
+                                    🏗️
+                                    ${esc(projectName)}
+                                </span>
+
+                                <span class="pill">
+                                    ${totalReports.toLocaleString("fa-IR")}
+                                    گزارش
+                                </span>
+
+                            </summary>
+
+
+                            <div class="accordion-content">
+
+                                ${
+                                    Object.entries(dates)
+                                        .map(
+                                            ([date, reports]) => {
+
+                                                return `
+
+                                                    <details
+                                                        class="accounting-accordion"
+                                                        style="margin-bottom:10px;"
+                                                    >
+
+                                                        <summary>
+
+                                                            <span>
+                                                                📅
+                                                                ${esc(
+                                                                    formatDailyReportDate(
+                                                                        date
+                                                                    )
+                                                                )}
+                                                            </span>
+
+                                                            <span class="pill">
+                                                                ${reports.length.toLocaleString("fa-IR")}
+                                                                گزارش
+                                                            </span>
+
+                                                        </summary>
+
+
+                                                        <div
+                                                            class="accordion-content"
+                                                        >
+
+                                                            ${
+                                                                reports
+                                                                    .map(report => {
+
+                                                                        return `
+
+                                                                            <div
+                                                                                style="
+                                                                                    background:#f9fafb;
+                                                                                    border:1px solid #e5e7eb;
+                                                                                    border-radius:14px;
+                                                                                    padding:14px;
+                                                                                    margin-bottom:10px;
+                                                                                "
+                                                                            >
+
+                                                                                <div
+                                                                                    style="
+                                                                                        white-space:pre-wrap;
+                                                                                        line-height:1.9;
+                                                                                    "
+                                                                                >
+                                                                                    ${esc(
+                                                                                        report.report_text
+                                                                                    )}
+                                                                                </div>
+
+                                                                            </div>
+
+                                                                        `;
+
+                                                                    })
+                                                                    .join("")
+                                                            }
+
+                                                        </div>
+
+                                                    </details>
+
+                                                `;
+
+                                            }
+                                        )
+                                        .join("")
+                                }
+
+                            </div>
+
+                        </details>
+
+                    `;
+
+                })
+                .join("");
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "DAILY REPORTS ERROR:",
+            error
+        );
+
+        box.innerHTML = `
+
+            <div class="notice error-box">
+
+                ❌ خطا در دریافت گزارش‌های روزانه
+
+                <br><br>
+
+                <small>
+                    ${esc(
+                        error?.message ||
+                        String(error)
+                    )}
+                </small>
+
+            </div>
+
+        `;
+
+    }
+
+}
     
 async function loadLatestRecords() {
     const box =
