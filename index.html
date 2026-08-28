@@ -3092,30 +3092,23 @@ async function loadWorkerActivities() {
 ===================================================== */
 
 async function loadInventory() {
-
   const box = document.getElementById("inventoryList");
-
   if (!box) {
     console.error("inventoryList پیدا نشد");
     return;
   }
-
   box.innerHTML = `
     <div class="empty">
       ⏳ در حال دریافت موجودی انبار...
     </div>
   `;
-
   try {
-
     if (!sb) {
       throw new Error("اتصال به Supabase برقرار نیست.");
     }
-
     /* =====================================================
        دریافت اقلام انبار
     ===================================================== */
-
     const { data: inventoryData, error: inventoryError } =
       await sb
         .from("inventory_items")
@@ -3131,70 +3124,49 @@ async function loadInventory() {
         .order("item_name", {
           ascending: true
         });
-
     if (inventoryError) {
       throw inventoryError;
     }
-
-
     /* =====================================================
        فیلتر اقلام غیرانبار
     ===================================================== */
-
     const NON_INVENTORY_WORDS = [
-
       "کرایه",
       "حمل",
       "باربری",
       "بارگیری",
       "تخلیه",
-
       "ناهار",
       "غذا",
       "صبحانه",
       "شام",
       "پذیرایی",
-
       "تعمیر",
       "سرویس",
       "خدمات",
       "دستمزد",
       "اجرت",
-
       "هزینه"
-
     ];
-
-
     function isRealInventoryItem(item) {
-
       const name =
         String(
           item?.item_name || ""
         ).trim().toLowerCase();
-
       if (!name) {
         return false;
       }
-
       return !NON_INVENTORY_WORDS.some(
-        word =>
-          name.includes(word)
+        word => name.includes(word)
       );
-
     }
-
-
     const inventoryItems =
       (inventoryData || []).filter(
         isRealInventoryItem
       );
-
-
     /* =====================================================
        دریافت پروژه‌ها
     ===================================================== */
-
     const { data: projectsData, error: projectsError } =
       await sb
         .from("projects")
@@ -3205,12 +3177,9 @@ async function loadInventory() {
         .order("name", {
           ascending: true
         });
-
     if (projectsError) {
       throw projectsError;
     }
-
-
     const projectsById =
       Object.fromEntries(
         (projectsData || []).map(
@@ -3220,15 +3189,12 @@ async function loadInventory() {
           ]
         )
       );
-
-
     /* =====================================================
-       دریافت گردش‌های ورود به انبار
+       دریافت تمام گردش‌های انبار
        
-       تاریخ نمایش از movement_date گرفته می‌شود،
-       نه created_at اقلام انبار.
+       هم ورود (in)
+       هم مصرف / خروج (out)
     ===================================================== */
-
     const { data: movementsData, error: movementsError } =
       await sb
         .from("inventory_movements")
@@ -3242,20 +3208,15 @@ async function loadInventory() {
           description,
           created_at
         `)
-        .eq("movement_type", "in")
         .order("movement_date", {
           ascending: false
         });
-
     if (movementsError) {
       throw movementsError;
     }
-
-
     /* =====================================================
-       ساخت Map اقلام انبار
+       ساخت Map اقلام
     ===================================================== */
-
     const inventoryById =
       Object.fromEntries(
         inventoryItems.map(
@@ -3265,120 +3226,107 @@ async function loadInventory() {
           ]
         )
       );
-
-
     /* =====================================================
-       گروه‌بندی:
+       محاسبه مصرف هر قلم
+    ===================================================== */
+    const consumedByItem = {};
+    (movementsData || []).forEach(
+      movement => {
+        if (
+          movement.movement_type !== "out"
+        ) {
+          return;
+        }
+        const quantity =
+          Number(
+            movement.quantity || 0
+          );
+        consumedByItem[movement.item_id] =
+          (
+            consumedByItem[movement.item_id] || 0
+          ) + quantity;
+      }
+    );
+    /* =====================================================
+       گروه‌بندی ورودها:
        
        پروژه
           ↓
        تاریخ
           ↓
-       اقلام واردشده
+       اقلام
     ===================================================== */
-
     const grouped = {};
-
-
-    (movementsData || []).forEach(
-      movement => {
-
-        const item =
-          inventoryById[
-            movement.item_id
-          ];
-
-        if (!item) {
-          return;
+    (movementsData || [])
+      .filter(
+        movement =>
+          movement.movement_type === "in"
+      )
+      .forEach(
+        movement => {
+          const item =
+            inventoryById[
+              movement.item_id
+            ];
+          if (!item) {
+            return;
+          }
+          const projectName =
+            projectsById[
+              item.project_id
+            ] ||
+            "پروژه نامشخص";
+          if (!grouped[projectName]) {
+            grouped[projectName] = {};
+          }
+          const dateKey =
+            movement.movement_date
+              ? String(
+                  movement.movement_date
+                ).slice(0, 10)
+              : "بدون تاریخ";
+          if (!grouped[projectName][dateKey]) {
+            grouped[projectName][dateKey] = [];
+          }
+          grouped[projectName][dateKey].push({
+            item,
+            quantity:
+              Number(
+                movement.quantity || 0
+              ),
+            unit:
+              movement.unit ||
+              item.unit ||
+              "عدد",
+            description:
+              movement.description || ""
+          });
         }
-
-
-        const projectName =
-          projectsById[
-            item.project_id
-          ] ||
-          "پروژه نامشخص";
-
-
-        if (!grouped[projectName]) {
-
-          grouped[projectName] = {};
-
-        }
-
-
-        const dateKey =
-          movement.movement_date
-            ? String(
-                movement.movement_date
-              ).slice(0, 10)
-            : "بدون تاریخ";
-
-
-        if (!grouped[projectName][dateKey]) {
-
-          grouped[projectName][dateKey] = [];
-
-        }
-
-
-        grouped[projectName][dateKey].push({
-
-          item,
-
-          quantity:
-            Number(
-              movement.quantity || 0
-            ),
-
-          unit:
-            movement.unit ||
-            item.unit ||
-            "عدد",
-
-          description:
-            movement.description || ""
-
-        });
-
-      }
-    );
-
-
+      );
     /* =====================================================
        اگر هیچ ورودی انبار نداریم
     ===================================================== */
-
     if (
       Object.keys(grouped).length === 0
     ) {
-
       box.innerHTML = `
         <div class="empty">
           📦 هنوز ورود واقعی به انبار ثبت نشده.
         </div>
       `;
-
       return;
-
     }
-
-
     /* =====================================================
        تبدیل تاریخ میلادی به شمسی
     ===================================================== */
-
     function formatInventoryDate(dateString) {
-
       if (!dateString) {
         return "بدون تاریخ";
       }
-
       const date =
         new Date(
           `${dateString}T12:00:00`
         );
-
       if (
         Number.isNaN(
           date.getTime()
@@ -3386,7 +3334,6 @@ async function loadInventory() {
       ) {
         return esc(dateString);
       }
-
       return new Intl.DateTimeFormat(
         "fa-IR-u-ca-persian",
         {
@@ -3395,14 +3342,64 @@ async function loadInventory() {
           day: "numeric"
         }
       ).format(date);
-
     }
-
-
+    /* =====================================================
+       نمایش وضعیت مصرف
+    ===================================================== */
+    function getConsumptionText(item) {
+      const consumed =
+        Number(
+          consumedByItem[item.id] || 0
+        );
+      const current =
+        Number(
+          item.current_quantity || 0
+        );
+      if (consumed <= 0) {
+        return `
+          <div
+            class="muted"
+            style="
+              margin-top:6px;
+              font-size:12px;
+            "
+          >
+            (مصرف نشده)
+          </div>
+        `;
+      }
+      if (current <= 0) {
+        return `
+          <div
+            class="muted"
+            style="
+              margin-top:6px;
+              font-size:12px;
+            "
+          >
+            (کل موجودی مصرف شده)
+          </div>
+        `;
+      }
+      return `
+        <div
+          class="muted"
+          style="
+            margin-top:6px;
+            font-size:12px;
+          "
+        >
+          (
+          ${consumed.toLocaleString("fa-IR")}
+          ${esc(item.unit || "عدد")}
+          مصرف شده
+          )
+        </div>
+      `;
+    }
     /* =====================================================
        مرتب‌سازی پروژه‌ها
     ===================================================== */
-
     const projectEntries =
       Object.entries(grouped)
         .sort(
@@ -3412,8 +3409,6 @@ async function loadInventory() {
               "fa"
             )
         );
-
-
     /* =====================================================
        ساخت خروجی نهایی
        
@@ -3425,47 +3420,33 @@ async function loadInventory() {
           ↓
        اقلام
     ===================================================== */
-
     box.innerHTML =
       projectEntries
         .map(
           ([projectName, dates]) => {
-
             const dateEntries =
               Object.entries(dates)
                 .sort(
                   ([a], [b]) =>
                     b.localeCompare(a)
                 );
-
-
             return `
-
               <details class="accounting-accordion">
-
                 <summary>
-
                   <span>
                     🏗️ ${esc(projectName)}
                   </span>
-
                   <span class="pill">
                     ${dateEntries.length.toLocaleString("fa-IR")}
                     روز
                   </span>
-
                 </summary>
-
-
                 <div class="accordion-content">
-
                   ${
                     dateEntries
                       .map(
                         ([dateKey, movements]) => {
-
                           return `
-
                             <details
                               class="accounting-accordion"
                               style="
@@ -3473,45 +3454,32 @@ async function loadInventory() {
                                 border:1px solid #e5e7eb;
                               "
                             >
-
                               <summary>
-
                                 <span>
                                   📅
                                   ${formatInventoryDate(
                                     dateKey
                                   )}
                                 </span>
-
                                 <span class="pill">
                                   ${movements.length.toLocaleString("fa-IR")}
                                   قلم
                                 </span>
-
                               </summary>
-
-
                               <div class="accordion-content">
-
                                 ${
                                   movements
                                     .map(
                                       movement => {
-
                                         const quantity =
                                           Number(
                                             movement.quantity || 0
                                           );
-
-
                                         const quantityClass =
                                           quantity > 0
                                             ? "success"
                                             : "danger";
-
-
                                         return `
-
                                           <div
                                             style="
                                               background:#f9fafb;
@@ -3521,7 +3489,6 @@ async function loadInventory() {
                                               margin-bottom:10px;
                                             "
                                           >
-
                                             <div
                                               style="
                                                 display:flex;
@@ -3530,15 +3497,12 @@ async function loadInventory() {
                                                 gap:10px;
                                               "
                                             >
-
                                               <strong>
                                                 📦
                                                 ${esc(
                                                   movement.item.item_name
                                                 )}
                                               </strong>
-
-
                                               <strong
                                                 class="${quantityClass}"
                                               >
@@ -3548,10 +3512,26 @@ async function loadInventory() {
                                                   movement.unit
                                                 )}
                                               </strong>
-
                                             </div>
-
-
+                                            <div
+                                              style="
+                                                margin-top:8px;
+                                                font-size:13px;
+                                              "
+                                            >
+                                              موجودی فعلی:
+                                              <strong>
+                                                ${Number(
+                                                  movement.item.current_quantity || 0
+                                                ).toLocaleString("fa-IR")}
+                                                ${esc(
+                                                  movement.item.unit || movement.unit
+                                                )}
+                                              </strong>
+                                            </div>
+                                            ${getConsumptionText(
+                                              movement.item
+                                            )}
                                             ${
                                               movement.description
                                                 ? `
@@ -3566,394 +3546,45 @@ async function loadInventory() {
                                                 `
                                                 : ""
                                             }
-
                                           </div>
-
                                         `;
-
                                       }
                                     )
                                     .join("")
-
                                 }
-
                               </div>
-
                             </details>
-
                           `;
-
                         }
                       )
                       .join("")
-
                   }
-
                 </div>
-
               </details>
-
             `;
-
           }
         )
         .join("");
-
-
   }
-
   catch (error) {
-
     console.error(
       "INVENTORY ERROR:",
       error
     );
-
-
     box.innerHTML = `
-
       <div class="notice error-box">
-
         ❌ خطا در دریافت موجودی انبار
-
         <br><br>
-
         <small>
           ${esc(
             error?.message ||
             String(error)
           )}
         </small>
-
       </div>
-
     `;
-
   }
-
 }
-    
-async function loadPurchases() {
-
-  const box = document.getElementById("purchasesList");
-
-  if (!box) return;
-
-  box.innerHTML = `
-    <div class="empty">
-      ⏳ در حال دریافت خریدها...
-    </div>
-  `;
-
-  try {
-
-    if (!sb) {
-      throw new Error(
-        "اتصال به Supabase برقرار نیست."
-      );
-    }
-
-    const { data, error } = await sb
-      .from("purchases")
-      .select(`
-        id,
-        item_name,
-        quantity,
-        unit,
-        amount_rial,
-        purchase_date,
-        project_id,
-        description
-      `)
-      .order("purchase_date", {
-        ascending: false
-      })
-      .order("created_at", {
-        ascending: false
-      });
-
-    if (error) throw error;
-
-    if (!data || data.length === 0) {
-
-      box.innerHTML = `
-        <div class="empty">
-          🛒 هنوز خریدی ثبت نشده.
-        </div>
-      `;
-
-      return;
-    }
-
-    /* ================================
-       گروه‌بندی بر اساس تاریخ
-    ================================= */
-
-    const groups = {};
-
-    data.forEach(purchase => {
-
-      const date =
-        purchase.purchase_date ||
-        "بدون تاریخ";
-
-      if (!groups[date]) {
-        groups[date] = [];
-      }
-
-      groups[date].push(purchase);
-
-    });
-
-
-    /* ================================
-       مرتب‌سازی تاریخ
-    ================================= */
-
-    const sortedDates =
-      Object.keys(groups).sort((a, b) => {
-
-        if (a === "بدون تاریخ") return 1;
-        if (b === "بدون تاریخ") return -1;
-
-        return (
-          new Date(b).getTime() -
-          new Date(a).getTime()
-        );
-
-      });
-
-
-    /* ================================
-       نمایش
-    ================================= */
-
-    box.innerHTML =
-      sortedDates.map(date => {
-
-        const purchases =
-          groups[date];
-
-
-        /*
-         * مبلغ موجود در Supabase
-         * مبلغ نهایی ریالی است.
-         *
-         * در بخش نمایش هیچ تبدیلی
-         * انجام نمی‌دهیم.
-         */
-
-        const totalRial =
-          purchases.reduce(
-            (sum, item) => {
-
-              return (
-                sum +
-                Number(
-                  item.amount_rial || 0
-                )
-              );
-
-            },
-            0
-          );
-
-
-        const totalFormatted =
-          totalRial.toLocaleString("fa-IR")
-          + " ریال";
-
-
-        const dateFormatted =
-          date === "بدون تاریخ"
-            ? "بدون تاریخ"
-            : dateFa(date);
-
-
-        return `
-
-          <details
-            class="accounting-accordion"
-          >
-
-            <summary>
-
-              <span>
-                📅 ${dateFormatted}
-              </span>
-
-              <span class="pill">
-                ${purchases.length} خرید
-              </span>
-
-            </summary>
-
-
-            <div
-              class="accordion-content"
-            >
-
-              <div
-                class="notice success-box"
-                style="margin-bottom:12px"
-              >
-
-                💰 مجموع خریدهای این تاریخ:
-
-                <b>
-                  ${totalFormatted}
-                </b>
-
-              </div>
-
-
-              ${purchases.map(purchase => {
-
-                /*
-                 * مقدار Supabase
-                 * مستقیماً ریال است.
-                 *
-                 * هیچ ×10 یا ÷10 انجام نمی‌شود.
-                 */
-
-                const amountRial =
-                  Number(
-                    purchase.amount_rial || 0
-                  );
-
-
-                return `
-
-                  <div
-                    class="latest-record latest-purchase"
-                  >
-
-                    <div
-                      class="latest-record-main"
-                    >
-
-                      <div>
-
-                        <div
-                          class="latest-record-title"
-                        >
-
-                          🛒
-                          ${esc(
-                            purchase.item_name ||
-                            "بدون نام"
-                          )}
-
-                        </div>
-
-
-                        <div
-                          class="latest-record-meta"
-                        >
-
-                          📦 مقدار:
-
-                          <b>
-                            ${esc(
-                              String(
-                                purchase.quantity ??
-                                "-"
-                              )
-                            )}
-                          </b>
-
-                          ${esc(
-                            purchase.unit ||
-                            ""
-                          )}
-
-                          <br>
-
-
-                          💰 مبلغ:
-
-                          <b>
-                            ${
-                              amountRial.toLocaleString(
-                                "fa-IR"
-                              )
-                            }
-                            ریال
-                          </b>
-
-
-                          ${
-                            purchase.description
-                              ? `
-
-                                <br>
-
-                                📝 توضیحات:
-
-                                ${esc(
-                                  purchase.description
-                                )}
-
-                              `
-                              : ""
-                          }
-
-                        </div>
-
-                      </div>
-
-                    </div>
-
-                  </div>
-
-                `;
-
-              }).join("")}
-
-            </div>
-
-          </details>
-
-        `;
-
-      }).join("");
-
-
-  } catch (error) {
-
-    console.error(
-      "PURCHASES ERROR:",
-      error
-    );
-
-
-    box.innerHTML = `
-
-      <div
-        class="notice error-box"
-      >
-
-        ❌ خطا در دریافت خریدها
-
-        <br><br>
-
-        <small>
-
-          ${
-            error?.message ||
-            String(error)
-          }
-
-        </small>
-
-      </div>
-
-    `;
-
-  }
-
-}
-
 
 
 async function loadPersonalAccounts() {
