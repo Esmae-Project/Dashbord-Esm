@@ -1619,7 +1619,7 @@ async function loadData(){
             sb
             .from("transactions")
             .select(
-                "id,contractor_id,project_id,type,description,amount_toman,transaction_date,status,created_at"
+                "id,contractor_id,project_id,type,description,amount_rial,transaction_date,status,created_at"
             )
             .order(
                 "created_at",
@@ -1827,7 +1827,7 @@ async function loadData(){
 
                     amount:
                         Number(
-                            transaction.amount_toman ||
+                            transaction.amount_rial ||
                             0
                         ),
 
@@ -3660,7 +3660,7 @@ async function loadPurchases() {
         item_name,
         quantity,
         unit,
-        amount_toman,
+        amount_rial,
         purchase_date,
         project_id,
         description
@@ -3750,7 +3750,7 @@ async function loadPurchases() {
               return (
                 sum +
                 Number(
-                  item.amount_toman || 0
+                  item.amount_rial || 0
                 )
               );
 
@@ -3818,7 +3818,7 @@ async function loadPurchases() {
 
                 const amountRial =
                   Number(
-                    purchase.amount_toman || 0
+                    purchase.amount_rial || 0
                   );
 
 
@@ -4060,10 +4060,10 @@ async function loadPersonalAccounts() {
     data.forEach(item => {
 
       const amount =
-        Number(item.amount_toman || 0);
+        Number(item.amount_rial || 0);
 
       const paid =
-        Number(item.paid_toman || 0);
+        Number(item.paid_rial || 0);
 
       const remaining =
         Math.max(
@@ -4162,10 +4162,10 @@ async function loadPersonalAccounts() {
     table.innerHTML = data.map(item => {
 
       const amount =
-        Number(item.amount_toman || 0);
+        Number(item.amount_rial || 0);
 
       const paid =
-        Number(item.paid_toman || 0);
+        Number(item.paid_rial || 0);
 
       const remaining =
         Math.max(
@@ -4342,7 +4342,7 @@ async function loadPersonalExpenses() {
         id,
         item_name,
         category,
-        amount_toman,
+        amount_rial,
         expense_date,
         description,
         created_at
@@ -4388,7 +4388,7 @@ async function loadPersonalExpenses() {
     };
     const total = data.reduce(
       (sum, item) =>
-        sum + Number(item.amount_toman || 0),
+        sum + Number(item.amount_rial || 0),
       0
     );
     if (summary) {
@@ -4444,7 +4444,7 @@ async function loadPersonalExpenses() {
           </td>
           <td>
             <b>
-              ${formatMoney(item.amount_toman)}
+              ${formatMoney(item.amount_rial)}
             </b>
           </td>
           <td>
@@ -4859,7 +4859,7 @@ async function loadLatestRecords() {
                     project_id,
                     type,
                     description,
-                    amount_toman,
+                    amount_rial,
                     transaction_date,
                     status,
                     created_at
@@ -4876,7 +4876,7 @@ async function loadLatestRecords() {
                     item_name,
                     quantity,
                     unit,
-                    amount_toman,
+                    amount_rial,
                     purchase_date,
                     project_id,
                     description,
@@ -4917,7 +4917,7 @@ async function loadLatestRecords() {
                     id,
                     item_name,
                     category,
-                    amount_toman,
+                    amount_rial,
                     expense_date,
                     description,
                     created_at
@@ -5172,7 +5172,7 @@ async function loadLatestRecords() {
 
                     amount:
                         Number(
-                            item.amount_toman || 0
+                            item.amount_rial || 0
                         )
 
                 });
@@ -5225,7 +5225,7 @@ async function loadLatestRecords() {
 
                     amount:
                         Number(
-                            item.amount_toman || 0
+                            item.amount_rial || 0
                         )
 
                 });
@@ -5335,7 +5335,7 @@ async function loadLatestRecords() {
 
                     amount:
                         Number(
-                            item.amount_toman || 0
+                            item.amount_rial || 0
                         )
 
                 });
@@ -5385,7 +5385,7 @@ async function loadLatestRecords() {
 
                     amount:
                         Number(
-                            item.amount_toman || 0
+                            item.amount_rial || 0
                         )
 
                 });
