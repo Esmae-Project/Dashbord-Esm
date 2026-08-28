@@ -4141,10 +4141,6 @@ async function loadDailyReports() {
             throw new Error("اتصال به Supabase برقرار نیست.");
         }
 
-        /* ==========================================
-           دریافت گزارش‌های روزانه
-        ========================================== */
-
         const { data, error } = await sb
             .from("daily_reports")
             .select(`
@@ -4165,28 +4161,16 @@ async function loadDailyReports() {
             throw error;
         }
 
-
-        /* ==========================================
-           پروژه‌ها
-        ========================================== */
-
         const projects = {};
 
         Object.entries(db.projects || {})
             .forEach(([name, project]) => {
 
                 if (project && project.id) {
-
                     projects[String(project.id)] = name;
-
                 }
 
             });
-
-
-        /* ==========================================
-           اگر گزارشی نداریم
-        ========================================== */
 
         if (!data || data.length === 0) {
 
@@ -4198,11 +4182,6 @@ async function loadDailyReports() {
 
             return;
         }
-
-
-        /* ==========================================
-           تبدیل تاریخ میلادی به شمسی
-        ========================================== */
 
         function formatDailyReportDate(dateString) {
 
@@ -4253,14 +4232,7 @@ async function loadDailyReports() {
             );
         }
 
-
-        /* ==========================================
-           گروه‌بندی:
-           پروژه → روز → گزارش
-        ========================================== */
-
         const grouped = {};
-
 
         data.forEach(report => {
 
@@ -4273,27 +4245,16 @@ async function loadDailyReports() {
                     .slice(0, 10);
 
             if (!grouped[projectName]) {
-
                 grouped[projectName] = {};
-
             }
 
             if (!grouped[projectName][reportDate]) {
-
                 grouped[projectName][reportDate] = [];
-
             }
 
-            grouped[projectName][reportDate].push(
-                report
-            );
+            grouped[projectName][reportDate].push(report);
 
         });
-
-
-        /* ==========================================
-           ساخت خروجی
-        ========================================== */
 
         box.innerHTML =
             Object.entries(grouped)
@@ -4324,7 +4285,6 @@ async function loadDailyReports() {
                                 </span>
 
                             </summary>
-
 
                             <div class="accordion-content">
 
@@ -4358,10 +4318,7 @@ async function loadDailyReports() {
 
                                                         </summary>
 
-
-                                                        <div
-                                                            class="accordion-content"
-                                                        >
+                                                        <div class="accordion-content">
 
                                                             ${
                                                                 reports
@@ -4449,8 +4406,10 @@ async function loadDailyReports() {
     }
 
 }
-    
+
+
 async function loadLatestRecords() {
+
     const box =
         document.getElementById("latestRecords");
 
@@ -4470,16 +4429,13 @@ async function loadLatestRecords() {
             );
         }
 
-        /* ==========================================
-           دریافت اطلاعات مستقیم از Supabase
-        ========================================== */
-
         const [
             transactionsRes,
             purchasesRes,
             workerRes,
             personalAccountsRes,
-            personalExpensesRes
+            personalExpensesRes,
+            dailyReportsRes
         ] = await Promise.all([
 
             sb
@@ -4556,14 +4512,24 @@ async function loadLatestRecords() {
                 .order("created_at", {
                     ascending: false
                 })
+                .limit(20),
+
+            sb
+                .from("daily_reports")
+                .select(`
+                    id,
+                    project_id,
+                    report_date,
+                    report_text,
+                    created_at
+                `)
+                .order("created_at", {
+                    ascending: false
+                })
                 .limit(20)
 
         ]);
 
-
-        /* ==========================================
-           بررسی خطاها
-        ========================================== */
 
         if (transactionsRes.error)
             throw transactionsRes.error;
@@ -4580,10 +4546,9 @@ async function loadLatestRecords() {
         if (personalExpensesRes.error)
             throw personalExpensesRes.error;
 
+        if (dailyReportsRes.error)
+            throw dailyReportsRes.error;
 
-        /* ==========================================
-           پروژه‌ها
-        ========================================== */
 
         const projects = {};
 
@@ -4604,10 +4569,6 @@ async function loadLatestRecords() {
             });
 
 
-        /* ==========================================
-           پیمانکاران
-        ========================================== */
-
         const contractors = {};
 
         Object.entries(db.contractors || {})
@@ -4627,13 +4588,6 @@ async function loadLatestRecords() {
             });
 
 
-        /* ==========================================
-           تبدیل تاریخ میلادی به شمسی
-           
-           فقط برای نمایش تاریخ استفاده می‌شود.
-           ترتیب رکوردها با created_at انجام می‌شود.
-        ========================================== */
-
         function formatLatestDate(dateString) {
 
             if (!dateString) {
@@ -4650,9 +4604,7 @@ async function loadLatestRecords() {
             if (
                 parts.length !== 3
             ) {
-
                 return value;
-
             }
 
             const year =
@@ -4669,9 +4621,7 @@ async function loadLatestRecords() {
                 !Number.isInteger(month) ||
                 !Number.isInteger(day)
             ) {
-
                 return value;
-
             }
 
             return new Intl.DateTimeFormat(
@@ -4697,80 +4647,48 @@ async function loadLatestRecords() {
         }
 
 
-        /* ==========================================
-           ساخت آرایه آخرین رکوردها
-        ========================================== */
-
         const records = [];
 
 
         /* ==========================================
            تراکنش‌ها
-           
-           شامل:
-           - کار انجام‌شده
-           - پرداخت
         ========================================== */
 
         (transactionsRes.data || [])
             .forEach(item => {
 
-                /*
-                 * فاکتورهای جایگزین‌شده
-                 * نباید در آخرین ثبت‌ها نمایش داده شوند.
-                 */
-
                 if (
                     item.status === "replaced"
                 ) {
-
                     return;
-
                 }
-
 
                 const isPayment =
                     item.type === "payment";
 
-
                 records.push({
-
-                    /*
-                     * تاریخ خود رکورد
-                     * فقط برای نمایش
-                     */
 
                     date:
                         item.transaction_date ||
                         item.created_at,
 
-
-                    /*
-                     * زمان واقعی ثبت
-                     * معیار اصلی مرتب‌سازی
-                     */
-
                     createdAt:
                         item.created_at,
-
 
                     type:
                         isPayment
                             ? "payment"
                             : "work",
 
-
                     icon:
                         isPayment
                             ? "💰"
                             : "🟢",
 
-
                     title:
                         isPayment
                             ? "پرداخت"
                             : "کار انجام‌شده",
-
 
                     person:
                         contractors[
@@ -4780,7 +4698,6 @@ async function loadLatestRecords() {
                         ] ||
                         "نامشخص",
 
-
                     project:
                         projects[
                             String(
@@ -4789,17 +4706,8 @@ async function loadLatestRecords() {
                         ] ||
                         "نامشخص",
 
-
                     description:
                         item.description || "",
-
-
-                    /*
-                     * مبلغ در Supabase
-                     * از قبل ریالی است.
-                     *
-                     * هیچ ×۱۰ انجام نمی‌شود.
-                     */
 
                     amount:
                         Number(
@@ -4850,10 +4758,6 @@ async function loadLatestRecords() {
                     description:
                         item.item_name || "",
 
-                    /*
-                     * مبلغ مستقیماً ریالی است.
-                     */
-
                     amount:
                         Number(
                             item.amount_rial || 0
@@ -4866,6 +4770,11 @@ async function loadLatestRecords() {
 
         /* ==========================================
            فعالیت نیروها
+           
+           فقط داده‌های موجود در جدول
+           worker_activities
+           
+           اضافه‌کاری / کسری کار
         ========================================== */
 
         (workerRes.data || [])
@@ -4873,23 +4782,11 @@ async function loadLatestRecords() {
 
                 records.push({
 
-                    /*
-                     * تاریخ واقعی فعالیت
-                     * برای نمایش
-                     */
-
                     date:
                         item.activity_date,
 
-
-                    /*
-                     * زمان واقعی ثبت در Supabase
-                     * برای مرتب‌سازی
-                     */
-
                     createdAt:
                         item.created_at,
-
 
                     type:
                         "worker",
@@ -4960,10 +4857,6 @@ async function loadLatestRecords() {
                         item.account_type ||
                         "",
 
-                    /*
-                     * مبلغ ریالی
-                     */
-
                     amount:
                         Number(
                             item.amount_rial || 0
@@ -5009,11 +4902,6 @@ async function loadLatestRecords() {
                         item.item_name ||
                         "",
 
-                    /*
-                     * مبلغ مستقیماً ریالی است.
-                     * ×۱۰ ممنوع.
-                     */
-
                     amount:
                         Number(
                             item.amount_rial || 0
@@ -5025,13 +4913,55 @@ async function loadLatestRecords() {
 
 
         /* ==========================================
-           مرتب‌سازی نهایی
-           
-           مهم:
-           فقط زمان واقعی ثبت در Supabase
-           یعنی created_at معیار ترتیب است.
+           گزارش‌های روزانه
+        ========================================== */
 
-           جدیدترین ثبت = بالاترین رکورد
+        (dailyReportsRes.data || [])
+            .forEach(item => {
+
+                records.push({
+
+                    date:
+                        item.report_date ||
+                        item.created_at,
+
+                    createdAt:
+                        item.created_at,
+
+                    type:
+                        "daily-report",
+
+                    icon:
+                        "📋",
+
+                    title:
+                        "گزارش روزانه",
+
+                    person:
+                        "",
+
+                    project:
+                        projects[
+                            String(
+                                item.project_id
+                            )
+                        ] ||
+                        "نامشخص",
+
+                    description:
+                        item.report_text ||
+                        "",
+
+                    amount:
+                        null
+
+                });
+
+            });
+
+
+        /* ==========================================
+           مرتب‌سازی نهایی
         ========================================== */
 
         records.sort((a, b) => {
@@ -5046,23 +4976,16 @@ async function loadLatestRecords() {
                     b.createdAt || 0
                 ).getTime();
 
-
             return timeB - timeA;
 
         });
 
 
-        /* ==========================================
-           فقط ۱۰ ثبت آخر
-        ========================================== */
-
         const latest =
             records.slice(0, 10);
 
 
-        if (
-            !latest.length
-        ) {
+        if (!latest.length) {
 
             box.innerHTML = `
                 <div class="empty">
@@ -5071,13 +4994,8 @@ async function loadLatestRecords() {
             `;
 
             return;
-
         }
 
-
-        /* ==========================================
-           خروجی
-        ========================================== */
 
         box.innerHTML =
             latest
@@ -5087,7 +5005,6 @@ async function loadLatestRecords() {
                         formatLatestDate(
                             item.date
                         );
-
 
                     return `
 
@@ -5223,7 +5140,6 @@ async function loadLatestRecords() {
                 })
                 .join("");
 
-
     }
 
     catch (error) {
@@ -5232,7 +5148,6 @@ async function loadLatestRecords() {
             "LATEST RECORDS ERROR:",
             error
         );
-
 
         box.innerHTML = `
 
