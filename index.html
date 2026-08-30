@@ -5179,6 +5179,309 @@ async function loadLatestRecords() {
 
 }
 
+
+/* =====================================================
+   FIX: نمایش خریدهای پروژه‌ای
+   پروژه → روز → اقلام
+===================================================== */
+
+async function loadPurchases(){
+
+    const box = document.getElementById("purchasesList");
+
+    if(!box) return;
+
+    box.innerHTML = `
+        <div class="empty">
+            ⏳ در حال دریافت خریدهای پروژه‌ای...
+        </div>
+    `;
+
+    try{
+
+        const { data, error } = await sb
+            .from("purchases")
+            .select(`
+                id,
+                project_id,
+                item_name,
+                quantity,
+                unit,
+                purchase_date,
+                amount_rial,
+                description,
+                created_at,
+                projects (
+                    id,
+                    name
+                )
+            `)
+            .order("purchase_date", { ascending:false })
+            .order("created_at", { ascending:false });
+
+        if(error) throw error;
+
+        if(!data || data.length === 0){
+
+            box.innerHTML = `
+                <div class="empty">
+                    📭 هنوز خریدی ثبت نشده است.
+                </div>
+            `;
+
+            return;
+        }
+
+
+        /* ---------------------------------------------
+           گروه‌بندی:
+           پروژه → روز → اقلام
+        --------------------------------------------- */
+
+        const projects = {};
+
+        data.forEach(item => {
+
+            const projectName =
+                item.projects?.name ||
+                "بدون پروژه";
+
+            const date =
+                item.purchase_date ||
+                item.created_at?.slice(0,10) ||
+                "";
+
+            if(!projects[projectName]){
+                projects[projectName] = {};
+            }
+
+            if(!projects[projectName][date]){
+                projects[projectName][date] = [];
+            }
+
+            projects[projectName][date].push(item);
+
+        });
+
+
+        let html = "";
+
+
+        Object.keys(projects).forEach(projectName => {
+
+            html += `
+                <details class="accounting-accordion">
+
+                    <summary>
+                        🏗️ ${escapeHtml(projectName)}
+                    </summary>
+
+                    <div class="accordion-content">
+            `;
+
+
+            const dates =
+                Object.keys(projects[projectName])
+                    .sort()
+                    .reverse();
+
+
+            dates.forEach(date => {
+
+                html += `
+                    <details>
+
+                        <summary>
+                            📅 ${formatPurchaseDate(date)}
+                        </summary>
+
+                        <div style="margin-top:10px">
+                `;
+
+
+                let dayTotal = 0;
+
+
+                projects[projectName][date]
+                    .forEach(item => {
+
+                        const amount =
+                            Number(item.amount_rial || 0);
+
+                        dayTotal += amount;
+
+
+                        const quantity =
+                            item.quantity ??
+                            1;
+
+                        const unit =
+                            item.unit ||
+                            "عدد";
+
+
+                        html += `
+                            <div class="latest-record latest-purchase">
+
+                                <div class="latest-record-main">
+
+                                    <div>
+                                        <div class="latest-record-title">
+                                            🛒 ${escapeHtml(
+                                                item.item_name ||
+                                                "کالای بدون نام"
+                                            )}
+                                        </div>
+
+                                        <div class="latest-record-meta">
+
+                                            مقدار:
+                                            ${escapeHtml(String(quantity))}
+                                            ${escapeHtml(unit)}
+
+                                            ${
+                                                item.description
+                                                ?
+                                                `<br>${escapeHtml(item.description)}`
+                                                :
+                                                ""
+                                            }
+
+                                        </div>
+                                    </div>
+
+                                    <div class="latest-record-amount">
+
+                                        ${formatRial(amount)}
+
+                                        ریال
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+                        `;
+
+                    });
+
+
+                html += `
+
+                        <div
+                            style="
+                                margin-top:10px;
+                                padding:10px;
+                                border-radius:12px;
+                                background:#f9fafb;
+                                font-weight:800;
+                            "
+                        >
+
+                            جمع خرید روز:
+                            ${formatRial(dayTotal)}
+                            ریال
+
+                        </div>
+
+                    </div>
+
+                    </details>
+                `;
+
+            });
+
+
+            html += `
+                    </div>
+
+                </details>
+            `;
+
+        });
+
+
+        box.innerHTML = html;
+
+
+    }
+    catch(error){
+
+        console.error(
+            "LOAD PURCHASES ERROR:",
+            error
+        );
+
+        box.innerHTML = `
+            <div class="notice error-box">
+
+                ❌ خطا در دریافت خریدها
+
+                <br>
+
+                ${escapeHtml(
+                    error.message ||
+                    String(error)
+                )}
+
+            </div>
+        `;
+
+    }
+
+}
+
+
+/* =====================================================
+   ابزارهای نمایش خرید
+===================================================== */
+
+function formatRial(value){
+
+    return Number(
+        value || 0
+    ).toLocaleString(
+        "fa-IR"
+    );
+
+}
+
+
+function formatPurchaseDate(date){
+
+    if(!date) return "بدون تاریخ";
+
+    try{
+
+        return new Date(
+            date + "T00:00:00"
+        ).toLocaleDateString(
+            "fa-IR"
+        );
+
+    }
+    catch{
+
+        return date;
+
+    }
+
+}
+
+
+function escapeHtml(value){
+
+    return String(
+        value ?? ""
+    )
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+
+}
+    
     
 /* =====================================================
    START
